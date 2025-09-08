@@ -234,7 +234,7 @@ export default function TodoPage() {
                         setTitle("");
                         setDescription("");
                       }}
-                      className="bg-[white] text-[#2B1887] px-3 py-2 rounded-md  hover:scale-105 duration-300"
+                      className="bg-[white] text-[#2B1887] px-3 py-2 rounded-md cursor-pointer hover:scale-105 duration-300"
                     >
                       Add +
                     </button>
@@ -426,14 +426,14 @@ export default function TodoPage() {
                   setTitle("");
                   setDescription("");
                 }}
-                className="bg-gray-400 text-white px-4 py-2 rounded-lg"
+                className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={saveTodo}
                 disabled={loading}
-                className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:scale-105 duration-300"
+                className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:scale-105 duration-300 cursor-pointer"
               >
                 {loading ? "Saving..." : editingTodo ? "Update" : "Save"}
               </button>
