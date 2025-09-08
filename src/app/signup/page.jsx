@@ -14,7 +14,7 @@ export default function SignupPage() {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/register", form);
+      const res = await axios.post("https://todo-backend-w-nextjs-production.up.railway.app/", form);
 
       if (res.status === 200) {
         toast.success("Signup successful ");

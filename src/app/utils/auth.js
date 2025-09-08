@@ -1,7 +1,7 @@
 import toast from "react-hot-toast";
 
 export const handleLogout = () => {
-  fetch("http://localhost:5000/api/auth/logout", { method: "POST" })
+  fetch("https://todo-backend-w-nextjs-production.up.railway.app/", { method: "POST" })
     .then(() => {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
