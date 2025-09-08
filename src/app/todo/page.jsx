@@ -189,7 +189,7 @@ export default function TodoPage() {
       const todoItem =
         columns[srcColId].find((t) => t._id === draggableId) || {};
 
-      await api.put(`/todo/${draggableId}`, {
+      await api.put(`/${draggableId}`, {
         completed: dstColId === "done",
         title: todoItem.title || "",
         description: todoItem.description || "",
