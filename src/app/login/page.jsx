@@ -19,8 +19,8 @@ export default function LoginPage() {
         password,
       });
 
-      localStorage.setItem("accessToken", res.data.accessToken);
-      localStorage.setItem("refreshToken", res.data.refreshToken);
+      localStorage.setItem("accessToken", res.data.accessToken) 
+      // localStorage.setItem("refreshToken", res.data.refreshToken);
 
       toast.success("Login successful");
       setTimeout(() => (window.location.href = "/todo"), 1000);
