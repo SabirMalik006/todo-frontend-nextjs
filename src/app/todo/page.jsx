@@ -22,7 +22,7 @@ export default function TodoPage() {
 
   const fetchTodos = async () => {
     try {
-      const res = await api.get("/todo");
+      const res = await api.get("/");
       const all = res.data || [];
       setColumns({
         todo: all.filter((t) => !t.completed),
