@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://todo-backend-w-nextjs-production.up.railway.app/", 
+  baseURL: "todo-backend-w-nextjs-production-6329.up.railway.app", 
 });
 
 api.interceptors.request.use((config) => {
