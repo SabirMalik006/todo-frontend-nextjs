@@ -14,7 +14,7 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("https://todo-backend-w-nextjs-production-6329.up.railway.app/api/todo", {
+      const res = await axios.post("https://todo-backend-w-nextjs-production-6329.up.railway.app/api/auth", {
         email,
         password,
       });

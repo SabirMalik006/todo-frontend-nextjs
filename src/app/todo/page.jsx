@@ -38,7 +38,7 @@ export default function TodoPage() {
     setLoading(true);
     try {
       if (editingTodo) {
-        const res = await api.put(`/todo/${editingTodo._id}`, {
+        const res = await api.put(`/${editingTodo._id}`, {
           title,
           description,
           completed: editingTodo.completed,
@@ -65,7 +65,7 @@ export default function TodoPage() {
         });
         toast.success("Todo updated ✏️");
       } else {
-        const res = await api.post("/todo", { title, description });
+        const res = await api.post("/", { title, description });
         const created = res.data;
         setColumns((prev) => ({ ...prev, todo: [...prev.todo, created] }));
         toast.success("Todo added ✅");
@@ -92,7 +92,7 @@ export default function TodoPage() {
         const newDest = [...prev[dest], moved];
         return { ...prev, [source]: newSource, [dest]: newDest };
       });
-      const res = await api.put(`/todo/${todo._id}`, {
+      const res = await api.put(`/${todo._id}`, {
         completed: !todo.completed,
         title: todo.title,
         description: todo.description,
@@ -118,7 +118,7 @@ export default function TodoPage() {
 
   const deleteTodo = async (id) => {
     try {
-      await api.delete(`/todo/${id}`);
+      await api.delete(`/${id}`);
       setColumns((prev) => ({
         todo: prev.todo.filter((t) => t._id !== id),
         done: prev.done.filter((t) => t._id !== id),
