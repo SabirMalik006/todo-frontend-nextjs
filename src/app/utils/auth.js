@@ -6,7 +6,7 @@ export const handleLogout = () => {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       toast.success("Logged out successfully ");
-      setTimeout(() => (window.location.href = "/login"), 1500);
+      setTimeout(() => (window.location.href = "/login"), 1000);
     })
     .catch(() => toast.error("Logout failed ❌"));
 };

@@ -23,13 +23,18 @@ export default function TodoPage() {
       const res = await api.get("/");
       const all = res.data || [];
       setColumns({
-        todo: all.filter((t) => !t.completed),
-        done: all.filter((t) => t.completed),
+        todo: all
+          .filter((t) => !t.completed)
+          .sort((a, b) => a.order - b.order),   
+        done: all
+          .filter((t) => t.completed)
+          .sort((a, b) => a.order - b.order),  
       });
     } catch (err) {
       toast.error("Failed to fetch todos ");
     }
   };
+  
 
   const saveTodo = async () => {
     if (!title.trim()) return toast.error("Title required!");
@@ -145,60 +150,73 @@ export default function TodoPage() {
   const onDragEnd = async (result) => {
     const { source, destination, draggableId } = result;
     if (!destination) return;
-
-    const srcColId = source.droppableId;
-    const dstColId = destination.droppableId;
-
-    if (srcColId === dstColId) {
-      setColumns((prev) => {
-        const list = Array.from(prev[srcColId]);
-        const [moved] = list.splice(source.index, 1);
-        list.splice(destination.index, 0, moved);
-        return { ...prev, [srcColId]: list };
-      });
-      return;
-    }
-
-    setColumns((prev) => {
-      const sourceList = Array.from(prev[srcColId]);
-      const destList = Array.from(prev[dstColId]);
-
-      const idx = sourceList.findIndex((i) => i._id === draggableId);
-      if (idx === -1) return prev;
+  
+    const srcCol = source.droppableId;
+    const dstCol = destination.droppableId;
+  
+  
+    let updatedColumns = { ...columns };
+  
+    if (srcCol === dstCol) {
+      
+      const list = Array.from(columns[srcCol]);
+      const [moved] = list.splice(source.index, 1);
+      list.splice(destination.index, 0, moved);
+  
+      list.forEach((t, i) => (t.order = i + 1));
+      updatedColumns[srcCol] = list;
+    } else {
+  
+      const sourceList = Array.from(columns[srcCol]);
+      const destList = Array.from(columns[dstCol]);
+  
+      const idx = sourceList.findIndex(t => t._id === draggableId);
+      if (idx === -1) return;
       const [moved] = sourceList.splice(idx, 1);
-      const movedUpdated = { ...moved, completed: dstColId === "done" };
-
-      destList.splice(destination.index, 0, movedUpdated);
-
-      return {
-        ...prev,
-        [srcColId]: sourceList,
-        [dstColId]: destList,
-      };
-    });
-
-    if (srcColId === "todo" && dstColId === "done") {
-      toast.success("Todo moved to completed");
+  
+      moved.completed = dstCol === "done";
+      destList.splice(destination.index, 0, moved);
+  
+      sourceList.forEach((t, i) => (t.order = i + 1));
+      destList.forEach((t, i) => (t.order = i + 1));
+  
+      updatedColumns[srcCol] = sourceList;
+      updatedColumns[dstCol] = destList;
     }
-    if (srcColId === "done" && dstColId === "todo") {
-      toast("✅Todo moved to pending");
-    }
+  
+ 
+    setColumns(updatedColumns);
+  
+    
+    (async () => {
+      try {
+    
+        if (srcCol !== dstCol) {
+          const movedTodo = updatedColumns[dstCol].find(t => t._id === draggableId);
+          await api.put(`/${draggableId}`, { completed: movedTodo.completed });
+  
+          // Toast message
+          if (dstCol === "done") toast.success("Todo moved to completed");
+          if (dstCol === "todo") toast.success("✅ Todo moved to pending");
+        }
+  
 
-    try {
-      const todoItem =
-        columns[srcColId].find((t) => t._id === draggableId) || {};
-
-      await api.put(`/${draggableId}`, {
-        completed: dstColId === "done",
-        title: todoItem.title || "",
-        description: todoItem.description || "",
-        priority: todoItem.priority || "low",
-      });
-    } catch (err) {
-      toast.error("❌ Failed to save move to server");
-      fetchTodos();
-    }
+        const orderData = [
+          ...updatedColumns.todo.map(t => ({ id: t._id, order: t.order })),
+          ...updatedColumns.done.map(t => ({ id: t._id, order: t.order })),
+        ];
+        await api.put("/update-order", { orderData });
+      } catch (err) {
+        toast.error("Failed to save changes");
+        fetchTodos(); 
+      }
+    })();
   };
+  
+  
+  
+  
+
 
   useEffect(() => {
     fetchTodos();
