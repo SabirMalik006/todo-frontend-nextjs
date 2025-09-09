@@ -4,6 +4,7 @@ import Link from "next/link";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import AuthRoute from "../components/AuthRoute";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,62 +15,77 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("https://todo-backend-w-nextjs-production-6329.up.railway.app/api/auth/login", {
-        email,
-        password,
-      });
+      const res = await axios.post(
+        "https://todo-backend-w-nextjs-production-6329.up.railway.app/api/auth/login",
+        {
+          email,
+          password,
+        }
+      );
 
-      localStorage.setItem("accessToken", res.data.accessToken) 
-      // localStorage.setItem("refreshToken", res.data.refreshToken);
+      localStorage.setItem("accessToken", res.data.accessToken);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
 
       toast.success("Login successful");
-      setTimeout(() => (window.location.href = "/todo"), 1000);
+      setTimeout(() => (window.location.href = "/"), 1000);
     } catch (err) {
       toast.error(err.response?.data?.message || "Invalid credentials ❌");
     }
   };
 
   return (
-    <main className="flex flex-col items-center justify-center h-screen bg-blue-100">
-      <div className="border border-gray-700 p-10 rounded-2xl">
-        <h1 className="text-3xl font-bold mb-4 text-center text-black">Login</h1>
+    <>
+      <AuthRoute reverse>
+        <main className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-[#0f2027] via-[#203a43] to-[#2c5364]">
+          <div className="bg-gray-900/80 backdrop-blur-md border border-gray-700 p-10 rounded-2xl shadow-lg w-80">
+            <h1 className="text-3xl font-bold mb-6 text-center text-white">
+              Login
+            </h1>
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-4 w-64">
-          <input
-            type="email"
-            placeholder="Email"
-            className="border border-gray-500 px-3 py-2 rounded-2xl text-black"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+            <form
+              onSubmit={handleLogin}
+              className="flex flex-col gap-4 text-white"
+            >
+              <input
+                type="email"
+                placeholder="Email"
+                className="px-3 py-2 rounded-xl border border-gray-600 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
 
-          <input
-            type="password"
-            placeholder="Password"
-            className="border px-3 py-2 rounded-2xl border-gray-500 text-black"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+              <input
+                type="password"
+                placeholder="Password"
+                className="px-3 py-2 rounded-xl border border-gray-600 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
 
-          <button
-            type="submit"
-            className="bg-blue-600 text-white py-2 rounded-2xl transform hover:scale-105 ease-in-out duration-300"
-          >
-            Login
-          </button>
-        </form>
+              <button
+                type="submit"
+                className="bg-cyan-600 text-white py-2 cursor-pointer rounded-xl font-semibold hover:bg-cyan-700 transform hover:scale-105 transition-all duration-300 shadow-md"
+              >
+                Login
+              </button>
+            </form>
 
-        {error && <p className="text-red-500 mt-2">{error}</p>}
+            {error && <p className="text-red-400 mt-2 text-center">{error}</p>}
 
-        <p className="mt-4 text-blue-600 text-center">
-          Don’t have an account?{" "}
-          <Link href="/signup" className="text-green-500">
-            Sign Up
-          </Link>
-        </p>
-      </div>
-    </main>
+            <p className="mt-6 text-gray-400 text-center">
+              Don’t have an account?{" "}
+              <Link
+                href="/signup"
+                className="text-cyan-400 font-semibold hover:underline"
+              >
+                Sign Up
+              </Link>
+            </p>
+          </div>
+        </main>
+      </AuthRoute>
+    </>
   );
 }

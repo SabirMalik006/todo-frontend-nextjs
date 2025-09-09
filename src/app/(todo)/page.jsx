@@ -7,18 +7,16 @@ import Navbar from "../components/Navbar";
 import api from "../utils/api";
 import toast from "react-hot-toast";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import ProtectedRoute from "../components/ProtectedRoute";
-
+import AuthRoute from "../components/AuthRoute";
 
 export default function TodoPage() {
-
   const [columns, setColumns] = useState({ todo: [], done: [] });
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState(null);
-
+  const [priority, setPriority] = useState("low");
 
   const fetchTodos = async () => {
     try {
@@ -29,7 +27,7 @@ export default function TodoPage() {
         done: all.filter((t) => t.completed),
       });
     } catch (err) {
-      toast.error("Failed to fetch todos ❌");
+      toast.error("Failed to fetch todos ");
     }
   };
 
@@ -38,12 +36,18 @@ export default function TodoPage() {
     setLoading(true);
     try {
       if (editingTodo) {
-        const res = await api.put(`/${editingTodo._id}`, {
+        const payload = {
           title,
           description,
+          priority,
           completed: editingTodo.completed,
-        });
+        };
+
+        console.log("Payload going to API:", payload);
+
+        const res = await api.put(`/${editingTodo._id}`, payload);
         const updated = res.data;
+
         setColumns((prev) => {
           const from = updated.completed ? "done" : "todo";
           return {
@@ -52,9 +56,7 @@ export default function TodoPage() {
                 ? prev.todo.map((t) => (t._id === updated._id ? updated : t))
                 : prev.todo
                     .filter((t) => t._id !== updated._id)
-                    .concat(
-                      updated.completed ? [] : [updated]
-                    ),
+                    .concat(updated.completed ? [] : [updated]),
             done:
               from === "done"
                 ? prev.done.map((t) => (t._id === updated._id ? updated : t))
@@ -63,9 +65,10 @@ export default function TodoPage() {
                     .concat(updated.completed ? [updated] : []),
           };
         });
+
         toast.success("Todo updated ✏️");
       } else {
-        const res = await api.post("/", { title, description });
+        const res = await api.post("/", { title, description, priority });
         const created = res.data;
         setColumns((prev) => ({ ...prev, todo: [...prev.todo, created] }));
         toast.success("Todo added ✅");
@@ -75,6 +78,7 @@ export default function TodoPage() {
       setDescription("");
       setEditingTodo(null);
       setIsModalOpen(false);
+      setPriority("low");
     } catch (err) {
       toast.error("Failed ❌");
     } finally {
@@ -95,6 +99,7 @@ export default function TodoPage() {
       const res = await api.put(`/${todo._id}`, {
         completed: !todo.completed,
         title: todo.title,
+        priority: todo.priority,
         description: todo.description,
       });
       const updated = res.data;
@@ -129,15 +134,13 @@ export default function TodoPage() {
     }
   };
 
-
   const openModalForEdit = (todo) => {
     setEditingTodo(todo);
     setTitle(todo.title || "");
     setDescription(todo.description ?? "");
+    setPriority(todo.priority || "low");
     setIsModalOpen(true);
   };
-
-
 
   const onDragEnd = async (result) => {
     const { source, destination, draggableId } = result;
@@ -145,7 +148,6 @@ export default function TodoPage() {
 
     const srcColId = source.droppableId;
     const dstColId = destination.droppableId;
-
 
     if (srcColId === dstColId) {
       setColumns((prev) => {
@@ -156,7 +158,6 @@ export default function TodoPage() {
       });
       return;
     }
-
 
     setColumns((prev) => {
       const sourceList = Array.from(prev[srcColId]);
@@ -176,14 +177,12 @@ export default function TodoPage() {
       };
     });
 
-    
     if (srcColId === "todo" && dstColId === "done") {
-      toast.success("✅ Todo moved to completed");
+      toast.success("Todo moved to completed");
     }
     if (srcColId === "done" && dstColId === "todo") {
       toast("✅Todo moved to pending");
     }
-
 
     try {
       const todoItem =
@@ -193,34 +192,34 @@ export default function TodoPage() {
         completed: dstColId === "done",
         title: todoItem.title || "",
         description: todoItem.description || "",
+        priority: todoItem.priority || "low",
       });
     } catch (err) {
       toast.error("❌ Failed to save move to server");
-      fetchTodos(); 
+      fetchTodos();
     }
   };
 
   useEffect(() => {
     fetchTodos();
-    
   }, []);
 
   return (
     <>
-    <ProtectedRoute/>
+      <AuthRoute />
       <Navbar />
       <div className="h-full w-full bg-[#2B1887]">
         <h1 className="text-white text-center text-6xl p-10">Todo Kanban</h1>
 
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="grid grid-cols-2 gap-4 bg-[#2B1887] h-[calc(100vh-10rem)] pl-20">
+          <div className="grid grid-cols-2 gap-10 bg-[#2B1887] px-20 items-start">
             {/* Left Column - To-do */}
             <Droppable droppableId="todo">
               {(provided) => (
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className="bg-[#D5CCFF] p-5 border rounded-2xl flex flex-col w-[33rem]"
+                  className="bg-[#D5CCFF] p-5 border rounded-2xl flex flex-col w-full min-h-[220px]"
                 >
                   <div className="flex justify-between mb-3">
                     <h3 className="text-3xl text-[#2B1887] font-semibold flex items-center gap-2">
@@ -258,7 +257,7 @@ export default function TodoPage() {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`flex justify-between items-start bg-[#E5E2F5] hover:bg-[#ddd7fc] transition duration-200 p-3 rounded-lg shadow h-[180px] ${
+                              className={`flex justify-between items-start bg-[#E5E2F5] hover:bg-[#ddd7fc] transition duration-200 p-3 rounded-lg shadow h-[276px] ${
                                 snapshot.isDragging
                                   ? "opacity-95 scale-101"
                                   : ""
@@ -268,10 +267,22 @@ export default function TodoPage() {
                                 onClick={() => openModalForEdit(todo)}
                                 className="cursor-grabbing flex flex-col gap-7 pl-[10px]"
                               >
-                                <div className="flex gap-1 items-center justify-between">
+                                <div className="flex gap-1 items-center justify-between  ">
                                   <p className="text-xl text-black font-semibold">
                                     {todo.title}
                                   </p>
+                                  <span
+                                    className={`px-2 py-1 rounded text-white text-sm ${
+                                      todo.priority === "high"
+                                        ? "bg-red-500"
+                                        : todo.priority === "medium"
+                                        ? "bg-yellow-500"
+                                        : "bg-green-500"
+                                    }`}
+                                  >
+                                    {todo.priority}
+                                  </span>
+
                                   <MdDeleteOutline
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -285,7 +296,7 @@ export default function TodoPage() {
                                   {todo.description || "No description"}
                                 </p>
 
-                                <div className="flex gap-4 items-center justify-between w-[448px]">
+                                <div className="flex gap-4 items-center justify-between w-[492px]">
                                   <div className="left flex gap-4 items-center">
                                     <p className="bg-[#ECB811] text-white font-semibold p-2 rounded-xl">
                                       Fri
@@ -298,6 +309,28 @@ export default function TodoPage() {
                                       {index + 1}
                                     </p>
                                   </div>
+                                </div>
+                                <div className="flex gap-4 items-center justify-between ">
+                                  <p className="text-md text-black font-semibold">
+                                    Created at :
+                                  </p>
+                                  <p className="text-md text-gray-600 font-medium">
+                                    {
+                                      new Date(todo.createdAt)
+                                        .toISOString()
+                                        .split("T")[0]
+                                    }
+                                  </p>
+                                </div>
+                                <div className="flex gap-4 items-center justify-between ">
+                                  <p className="text-md text-black font-semibold">
+                                    Time at :
+                                  </p>
+                                  <p className="text-md text-gray-600 font-medium">
+                                    {new Date(
+                                      todo.createdAt
+                                    ).toLocaleTimeString()}
+                                  </p>
                                 </div>
                               </div>
                             </div>
@@ -317,7 +350,7 @@ export default function TodoPage() {
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className="bg-[#D5CCFF] p-5 border rounded-2xl flex flex-col w-[33rem]"
+                  className="bg-[#D5CCFF] p-5 border rounded-2xl flex flex-col w-full min-h-[220px]"
                 >
                   <h3 className="text-3xl text-[#2B1887] font-semibold flex items-center gap-2">
                     <IoCheckmarkDoneSharp />
@@ -341,7 +374,7 @@ export default function TodoPage() {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`flex justify-between items-start bg-[#E5E2F5] hover:bg-[#ddd7fc] transition duration-200 p-3 rounded-lg shadow h-[180px] ${
+                              className={`flex justify-between items-start bg-[#E5E2F5] hover:bg-[#ddd7fc] transition duration-200 p-3 rounded-lg shadow h-[276px] ${
                                 snapshot.isDragging
                                   ? "opacity-95 scale-101"
                                   : ""
@@ -355,6 +388,17 @@ export default function TodoPage() {
                                   <p className="text-xl text-black font-semibold">
                                     {todo.title}
                                   </p>
+                                   <span
+                                    className={`px-2 py-1 rounded text-white text-sm ${
+                                      todo.priority === "high"
+                                        ? "bg-red-500"
+                                        : todo.priority === "medium"
+                                        ? "bg-yellow-500"
+                                        : "bg-green-500"
+                                    }`}
+                                  >
+                                    {todo.priority}
+                                  </span>
                                   <MdDeleteOutline
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -368,7 +412,7 @@ export default function TodoPage() {
                                   {todo.description || "No description"}
                                 </p>
 
-                                <div className="flex gap-4 items-center justify-between w-[448px]">
+                                <div className="flex gap-4 items-center justify-between w-[492px]">
                                   <div className="left flex gap-4 items-center">
                                     <p className="bg-[#ECB811] text-white font-semibold p-2 rounded-xl">
                                       Fri
@@ -381,6 +425,28 @@ export default function TodoPage() {
                                       {index + 1}
                                     </p>
                                   </div>
+                                </div>
+                                <div className="flex gap-4 items-center justify-between ">
+                                  <p className="text-md text-black font-semibold">
+                                    Created at :
+                                  </p>
+                                  <p className="text-md text-gray-600 font-medium">
+                                    {
+                                      new Date(todo.createdAt)
+                                        .toISOString()
+                                        .split("T")[0]
+                                    }
+                                  </p>
+                                </div>
+                                <div className="flex gap-4 items-center justify-between ">
+                                  <p className="text-md text-black font-semibold">
+                                    Time at :
+                                  </p>
+                                  <p className="text-md text-gray-600 font-medium">
+                                    {new Date(
+                                      todo.createdAt
+                                    ).toLocaleTimeString()}
+                                  </p>
                                 </div>
                               </div>
                             </div>
@@ -411,6 +477,16 @@ export default function TodoPage() {
               placeholder="Enter todo title"
               className="border px-3 py-2 rounded-lg w-full mb-4"
             />
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              className="border px-3 py-2 rounded-lg w-full mb-4"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -441,7 +517,7 @@ export default function TodoPage() {
           </div>
         </div>
       )}
-      <ProtectedRoute/>
+      <AuthRoute />
     </>
   );
 }

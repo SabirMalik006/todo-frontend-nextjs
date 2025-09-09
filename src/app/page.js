@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
+import TodoPage from "./(todo)/page";
 
-export default function HomePage() {
-  
-  redirect("/signup");
+export default function Home() {
+  return <TodoPage />;
 }
