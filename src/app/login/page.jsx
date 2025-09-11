@@ -36,56 +36,73 @@ export default function LoginPage() {
   return (
     <>
       <AuthRoute reverse>
-        <main className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-[#0f2027] via-[#203a43] to-[#2c5364]">
-          <div className="bg-gray-900/80 backdrop-blur-md border border-gray-700 p-10 rounded-2xl shadow-lg w-80">
-            <h1 className="text-3xl font-bold mb-6 text-center text-white">
-              Login
-            </h1>
+  <main className="relative flex h-screen w-full login-page">
+    {/* Background Shape */}
+    <div className="absolute inset-0">
+    <svg
+        className="w-full h-full"
+        viewBox="0 0 1440 800"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none"
+      >
+        <path
+          fill="black"
+          d="M0,0 L0,800 C480,400 960,600 1440,0 L1440,0 Z"
+        />
+      </svg>
+    </div>
 
-            <form
-              onSubmit={handleLogin}
-              className="flex flex-col gap-4 text-white"
-            >
-              <input
-                type="email"
-                placeholder="Email"
-                className="px-3 py-2 rounded-xl border border-gray-600 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+    {/* Login Box */}
+    <div className="relative z-10 flex w-full items-center justify-center min-h-screen">
+      <div className="w-80 rounded-2xl p-10 bg-white/30 backdrop-blur-md shadow-lg">
+        {/* Heading */}
+        <h1 className="text-2xl font-bold mb-6 text-center text-white/80">
+          LOGIN
+        </h1>
 
-              <input
-                type="password"
-                placeholder="Password"
-                className="px-3 py-2 rounded-xl border border-gray-600 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+        {/* Form */}
+        <form onSubmit={handleLogin} className="flex flex-col gap-4 text-white">
+          <input
+            type="email"
+            placeholder="Email"
+            className="border-b border-white/50 bg-transparent focus:outline-none py-2"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-              <button
-                type="submit"
-                className="bg-cyan-600 text-white py-2 cursor-pointer rounded-xl font-semibold hover:bg-cyan-700 transform hover:scale-105 transition-all duration-300 shadow-md"
-              >
-                Login
-              </button>
-            </form>
+          <input
+            type="password"
+            placeholder="Password"
+            className="border-b border-white/50 bg-transparent focus:outline-none py-2"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
 
-            {error && <p className="text-red-400 mt-2 text-center">{error}</p>}
+          <button
+            type="submit"
+            className="border border-black py-2 mt-4 text-black cursor-pointer font-medium rounded-2xl hover:bg-black hover:text-white transition-all"
+          >
+            LOGIN
+          </button>
+        </form>
 
-            <p className="mt-6 text-gray-400 text-center">
-              Don’t have an account?{" "}
-              <Link
-                href="/signup"
-                className="text-cyan-400 font-semibold hover:underline"
-              >
-                Sign Up
-              </Link>
-            </p>
-          </div>
-        </main>
-      </AuthRoute>
+        {/* Divider */}
+        <div className="my-4 text-center text-sm text-black">OR</div>
+
+        {/* Signup Link */}
+        <Link
+          href="/signup"
+          className="block border border-black py-2 cursor-pointer text-black font-medium rounded-2xl text-center hover:bg-black hover:text-white transition-all"
+        >
+          SIGN UP
+        </Link>
+      </div>
+    </div>
+  </main>
+</AuthRoute>
+
     </>
   );
 }
