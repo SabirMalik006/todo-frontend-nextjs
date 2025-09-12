@@ -274,7 +274,7 @@ export default function TodoPage() {
                     {/* Add Button */}
                     <button
                       onClick={() => setIsModalOpen(true)}
-                      className="bg-[#2B1887] text-white px-3 py-1 rounded-lg hover:bg-[#4321a8] duration-300"
+                      className="bg-[#2B1887] text-white px-3 cursor-pointer py-1 rounded-lg hover:bg-[#4321a8] duration-300"
                     >
                       + Add
                     </button>
