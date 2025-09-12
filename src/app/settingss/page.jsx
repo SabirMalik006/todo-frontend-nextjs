@@ -15,7 +15,7 @@ export default function Settings() {
   const [imagePreview, setImagePreview] = useState(null);
 
   const [user, setUser] = useState(null);
-  const [activeOption, setActiveOption] = useState(null); // 👈 selected option
+  const [activeOption, setActiveOption] = useState(null); 
 
   const fetchUser = async () => {
     try {
@@ -39,7 +39,7 @@ export default function Settings() {
     fetchUser();
   }, []);
 
-  // ✅ name change ke liye separate function
+
   const handleChangeName = async () => {
     try {
       const res = await api.put(
@@ -65,7 +65,7 @@ export default function Settings() {
     }
   };
 
-  // ✅ baaki cases (image, password)
+
   const handleSave = async (e) => {
     e.preventDefault();
 

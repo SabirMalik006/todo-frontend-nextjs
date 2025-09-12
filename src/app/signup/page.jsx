@@ -16,7 +16,7 @@ export default function SignupPage() {
     e.preventDefault();
     try {
       const res = await axios.post(
-        "https://todo-backend-w-nextjs-production-6329.up.railway.app/api/auth/register",
+        "https://todo-backend-w-nextjs-production-addb.up.railway.app/api/auth/register",
         form
       );
 

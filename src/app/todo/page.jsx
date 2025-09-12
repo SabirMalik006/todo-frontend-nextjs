@@ -63,7 +63,7 @@ export default function TodoPage() {
           description,
           priority,
           completed: editingTodo.completed,
-          column: editingTodo.column || "todo", // important
+          column: editingTodo.column || "todo", 
         };
 
         const res = await api.put(`todo/${editingTodo._id}`, payload);
@@ -173,7 +173,7 @@ export default function TodoPage() {
   
     let updatedColumns = { ...columns };
   
-    // Same column reordering
+  
     if (srcCol === dstCol) {
       const list = Array.from(columns[srcCol] || []);
       const [moved] = list.splice(source.index, 1);
@@ -181,7 +181,7 @@ export default function TodoPage() {
       list.forEach((t, i) => (t.order = i + 1));
       updatedColumns[srcCol] = list;
     } else {
-      // Different column move
+
       const sourceList = Array.from(columns[srcCol] || []);
       const destList = Array.from(columns[dstCol] || []);
   
@@ -190,7 +190,7 @@ export default function TodoPage() {
   
       const [moved] = sourceList.splice(idx, 1);
       moved.completed = dstCol === "done";
-      moved.column = dstCol; // very important
+      moved.column = dstCol;
       destList.splice(destination.index, 0, moved);
   
       sourceList.forEach((t, i) => (t.order = i + 1));
@@ -202,7 +202,7 @@ export default function TodoPage() {
   
     setColumns(updatedColumns);
   
-    // save to backend
+   
     try {
       const movedTodo = updatedColumns[dstCol].find(
         (t) => String(t._id) === String(draggableId)
@@ -238,7 +238,7 @@ export default function TodoPage() {
       if (dstCol === "pending") toast.success("Todo moved to pending");
     } catch (err) {
       toast.error("Failed to save changes");
-      fetchTodos(); // restore from backend
+      fetchTodos();
     }
   };
   
