@@ -10,36 +10,42 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
 
-  // Fetch logged-in user from backend
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) return;
 
-        const res = await axios.get(
-          "https://todo-backend-w-nextjs-production-6329.up.railway.app/api/auth/me",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+  const fetchUser = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) return;
 
+      const res = await axios.get(
+        "https://todo-backend-w-nextjs-production-6329.up.railway.app/api/auth/me",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-        setUser(res.data); 
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        toast.error("Failed to fetch user info");
-      }
-    };
+      setUser(res.data);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      toast.error("Failed to fetch user info");
+    }
+  };
 
   useEffect(() => {
     fetchUser();
+
+    const handleUserUpdate = () => fetchUser();
+    window.addEventListener("userUpdated", handleUserUpdate);
+
+    return () => window.removeEventListener("userUpdated", handleUserUpdate);
   }, []);
 
   return (
     <nav className="flex justify-between items-center p-4 bg-[#2B1887] border-b border-gray-300 relative">
-      <h1 className="font-bold text-lg text-white">Todo App</h1>
+      <h1 className="font-bold text-lg text-white cursor-pointer">
+        <Link href="/" >Todo App</Link>
+      </h1>
 
       <div className="relative">
         <button
@@ -48,7 +54,7 @@ export default function Navbar() {
         >
           {user?.image ? (
             <img
-              src={user.image}
+              src={user.image + "?t=" + new Date().getTime()} // cache bust
               alt="User Avatar"
               className="w-full h-full rounded-full object-cover"
             />
@@ -62,7 +68,7 @@ export default function Navbar() {
           <div className="absolute right-0 mt-2 w-30 bg-white/90 rounded-lg shadow-lg p-5 z-50">
             <Link
               href="/settingss"
-              className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+              className="block px-4 py-2 rounded-2xl text-gray-700 mb-2 hover:bg-gray-200 transform duration-200"
             >
               Settings
             </Link>

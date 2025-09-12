@@ -20,7 +20,13 @@ export default function TodoPage() {
 
   const fetchTodos = async () => {
     try {
-      const res = await api.get("/");
+      const res = await api.get("/todo", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
       const all = res.data || [];
       setColumns({
         todo: all
@@ -37,7 +43,7 @@ export default function TodoPage() {
       toast.error("Failed to fetch todos ");
     }
   };
-
+  
   const openAddModal = () => {
     setEditingTodo(null);
     setTitle("");
@@ -60,7 +66,7 @@ export default function TodoPage() {
           column: editingTodo.column || "todo", // important
         };
 
-        const res = await api.put(`/${editingTodo._id}`, payload);
+        const res = await api.put(`todo/${editingTodo._id}`, payload);
         const updated = res.data;
 
         setColumns((prev) => {
@@ -82,7 +88,7 @@ export default function TodoPage() {
 
         toast.success("Todo updated ✏️");
       } else {
-        const res = await api.post("/", { title, description, priority });
+        const res = await api.post("/todo/", { title, description, priority });
         const created = res.data;
         setColumns((prev) => ({ ...prev, todo: [...prev.todo, created] }));
         toast.success("Todo added ✅");
@@ -111,7 +117,7 @@ export default function TodoPage() {
         const newDest = [...prev[dest], moved];
         return { ...prev, [source]: newSource, [dest]: newDest };
       });
-      const res = await api.put(`/${todo._id}`, {
+      const res = await api.put(`todo/${todo._id}`, {
         completed: !todo.completed,
         title: todo.title,
         priority: todo.priority,
@@ -138,7 +144,7 @@ export default function TodoPage() {
 
   const deleteTodo = async (id) => {
     try {
-      await api.delete(`/${id}`);
+      await api.delete(`todo/${id}`);
       setColumns((prev) => ({
         todo: prev.todo.filter((t) => t._id !== id),
         done: prev.done.filter((t) => t._id !== id),
@@ -202,7 +208,7 @@ export default function TodoPage() {
         (t) => String(t._id) === String(draggableId)
       );
   
-      await api.put(`/${draggableId}`, {
+      await api.put(`todo/${draggableId}`, {
         completed: movedTodo.completed,
         column: movedTodo.column,
       });
@@ -211,7 +217,7 @@ export default function TodoPage() {
         ...updatedColumns.todo.map((t) => ({
           id: t._id,
           order: t.order,
-          column: "todo",
+          column: "todo"
         })),
         ...updatedColumns.pending.map((t) => ({
           id: t._id,
@@ -225,7 +231,7 @@ export default function TodoPage() {
         })),
       ];
   
-      await api.put("/update-order", { orderData });
+      await api.put("todo/update-order", { orderData });
   
       if (dstCol === "done") toast.success("Todo moved to completed");
       if (dstCol === "todo") toast.success("Todo moved to todo");
@@ -247,11 +253,12 @@ export default function TodoPage() {
     <>
       <AuthRoute />
       <Navbar />
-      <div className="h-full w-full bg-[#2B1887] todo">
+      <div className="h-full w-full bg-[#2B1887] todo ">
         <h1 className="text-white text-center text-6xl p-10">Todo Kanban</h1>
 
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="grid grid-cols-3 gap-10 bg-[#2B1887] px-10 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 bg-[#2B1887] px-10 items-start">
+
             {/* Left Column - To-do */}
             <Droppable droppableId="todo">
               {(provided) => (
@@ -322,9 +329,7 @@ export default function TodoPage() {
                               {/* Left Side: Date + dots + priority */}
                               <div className="flex items-center gap-3 w-full justify-between">
                                 <div className="flex gap-1 items-center">
-                                  <p className="bg-[#ECB811] text-white text-sm font-semibold px-2 py-1 rounded-lg">
-                                    Fri
-                                  </p>
+                                <p className="bg-[#ECB811] text-white text-sm font-semibold px-2 py-1 rounded-lg">{todo.day}</p>
                                   <div className="flex gap-1">
                                     <span className="bg-[#adaac2] h-[12px] w-[24px] rounded-bl-2xl"></span>
                                     <span className="bg-[#adaac2] h-[12px] w-[24px] rounded-bl-2xl"></span>
@@ -416,9 +421,7 @@ export default function TodoPage() {
                               {/* Left Side: Date + dots + priority */}
                               <div className="flex items-center gap-3 w-full justify-between">
                                 <div className="flex gap-1 items-center">
-                                  <p className="bg-[#ECB811] text-white text-sm font-semibold px-2 py-1 rounded-lg">
-                                    Fri
-                                  </p>
+                                <p className="bg-[#ECB811] text-white text-sm font-semibold px-2 py-1 rounded-lg">{todo.day}</p>
                                   <div className="flex gap-1">
                                     <span className="bg-[#ECB811] h-[12px] w-[24px] rounded-bl-2xl"></span>
                                     <span className="bg-[#adaac2] h-[12px] w-[24px] rounded-bl-2xl"></span>
@@ -501,9 +504,7 @@ export default function TodoPage() {
                               {/* Left Side: Date + dots + priority */}
                               <div className="flex items-center gap-3 w-full justify-between">
                                 <div className="flex gap-1 items-center">
-                                  <p className="bg-[#ECB811] text-white text-sm font-semibold px-2 py-1 rounded-lg">
-                                    Fri
-                                  </p>
+                                <p className="bg-[#ECB811] text-white text-sm font-semibold px-2 py-1 rounded-lg">{todo.day}</p>
                                   <div className="flex gap-1">
                                     <span className="bg-[#ECB811] h-[12px] w-[24px] rounded-bl-2xl"></span>
                                     <span className="bg-[#ECB811] h-[12px] w-[24px] rounded-bl-2xl"></span>
