@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { IoReturnUpBackOutline } from "react-icons/io5";
 import api from "../utils/api";
 
 export default function Settings() {
@@ -142,39 +143,49 @@ export default function Settings() {
     <>
       <Navbar />
 
-      <div className="w-full max-w-lg flex px-5 my-2">
+      <div className="w-full max-w-lg flex px-8 my-4">
         <Link
           href="/"
-          className="text-white font-medium text-start bg-[#2B1887] px-4 py-2 rounded-lg"
+          className="text-white font-medium text-start bg-[#2B1887] px-3 py-1 rounded-lg"
         >
-          Back
+          <IoReturnUpBackOutline className="w-6 h-6" />
         </Link>
       </div>
 
-      <main className="flex flex-col items-center justify-center min-h-[78vh] bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 p-6">
-        <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-3xl font-extrabold mb-6 text-center text-gray-800">
+      <main className="flex flex-col items-center justify-center min-h-[68vh] px-8">
+        <div className="w-full max-w-lg bg-[#f7f2f2] rounded-2xl shadow-xl px-6 py-6 mb-4">
+          {/* user image here */}
+          <div className="flex items-center justify-center " >
+          {imagePreview && (
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className=" w-34 h-34 mb-2 rounded-full object-cover text-center"
+                    />
+                  )}
+          </div>
+          <h2 className="text-3xl font-extrabold mb-6 text-center text-gray-900">
             User Settings
           </h2>
-
+          
           {/* Options */}
           {!activeOption && (
             <div className="space-y-4">
               <button
                 onClick={() => setActiveOption("image")}
-                className="w-full bg-indigo-500 text-white py-2 cursor-pointer rounded-lg font-medium hover:bg-indigo-600 transition"
+                className="w-full bg-gray-700 text-white py-2 cursor-pointer rounded-lg font-medium hover:opacity-70 duration-300 transition"
               >
                 Change Profile Image
               </button>
               <button
                 onClick={() => setActiveOption("name")}
-                className="w-full bg-purple-500 cursor-pointer text-white py-2 rounded-lg font-medium hover:bg-purple-600 transition"
+                className="w-full bg-gray-700 text-white py-2 cursor-pointer rounded-lg font-medium hover:opacity-70 duration-300 transition"
               >
                 Change Username
               </button>
               <button
                 onClick={() => setActiveOption("password")}
-                className="w-full bg-pink-500 cursor-pointer text-white py-2 rounded-lg font-medium hover:bg-pink-600 transition"
+                className="w-full bg-gray-700 text-white py-2 cursor-pointer rounded-lg font-medium hover:opacity-70 duration-300 transition"
               >
                 Change Password
               </button>
@@ -199,13 +210,6 @@ export default function Settings() {
                     }}
                     className="container mx-auto py-1 px-3 cursor-pointer rounded text-black border border-black text-center"
                   />
-                  {imagePreview && (
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="mt-2 w-24 h-24 rounded-full object-cover text-center"
-                    />
-                  )}
                 </div>
               )}
 
@@ -285,7 +289,7 @@ export default function Settings() {
               <div className="flex gap-4">
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 rounded-lg cursor-pointer font-semibold hover:from-indigo-700 hover:to-purple-700 transition"
+                  className="w-full bg-gray-700 text-white py-2 cursor-pointer rounded-lg  hover:opacity-70 duration-300 transition font-semibold"
                 >
                   Save Changes
                 </button>

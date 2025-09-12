@@ -253,11 +253,10 @@ export default function TodoPage() {
     <>
       <AuthRoute />
       <Navbar />
-      <div className="h-full w-full bg-[#2B1887] todo ">
-        <h1 className="text-white text-center text-6xl p-10">Todo Kanban</h1>
+      <div className="h-full w-full bg-[#e0dee6] todo pt-15 ">
 
         <DragDropContext onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 bg-[#2B1887] px-10 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 bg-[#e0dee6] px-10 items-start">
 
             {/* Left Column - To-do */}
             <Droppable droppableId="todo">
@@ -506,8 +505,8 @@ export default function TodoPage() {
                                 <div className="flex gap-1 items-center">
                                 <p className="bg-[#ECB811] text-white text-sm font-semibold px-2 py-1 rounded-lg">{todo.day}</p>
                                   <div className="flex gap-1">
-                                    <span className="bg-[#ECB811] h-[12px] w-[24px] rounded-bl-2xl"></span>
-                                    <span className="bg-[#ECB811] h-[12px] w-[24px] rounded-bl-2xl"></span>
+                                    <span className="bg-[#86f75a] h-[12px] w-[24px] rounded-bl-2xl"></span>
+                                    <span className="bg-[#86f75a] h-[12px] w-[24px] rounded-bl-2xl"></span>
                                   </div>
                                 </div>
                                 <span
