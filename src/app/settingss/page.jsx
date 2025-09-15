@@ -16,7 +16,7 @@ export default function Settings() {
   const [imagePreview, setImagePreview] = useState(null);
 
   const [user, setUser] = useState(null);
-  const [activeOption, setActiveOption] = useState(null); 
+  const [activeOption, setActiveOption] = useState(null);
 
   const fetchUser = async () => {
     try {
@@ -39,7 +39,6 @@ export default function Settings() {
   useEffect(() => {
     fetchUser();
   }, []);
-
 
   const handleChangeName = async () => {
     try {
@@ -65,7 +64,6 @@ export default function Settings() {
       toast.error(msg);
     }
   };
-
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -136,7 +134,6 @@ export default function Settings() {
       }
       toast.error(msg);
     }
-    
   };
 
   return (
@@ -153,21 +150,28 @@ export default function Settings() {
       </div>
 
       <main className="flex flex-col items-center justify-center min-h-[68vh] px-8">
-        <div className="w-full max-w-lg bg-[#f7f2f2] rounded-2xl shadow-xl px-6 py-6 mb-4">
+        <div className="w-full max-w-lg bg-[#f7f2f2] rounded-2xl shadow-xl px-10 py-20 mb-4">
           {/* user image here */}
-          <div className="flex items-center justify-center " >
-          {imagePreview && (
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className=" w-34 h-34 mb-2 rounded-full object-cover text-center"
-                    />
-                  )}
+          <div className="flex items-center justify-center mb-4">
+            {imagePreview ? (
+              <img
+                src={imagePreview}
+                alt="Preview"
+                className="w-34 h-34 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-34 h-34 rounded-full bg-gray-300 flex items-center justify-center text-center">
+                <span className="text-gray-600 text-base font-medium">
+                  Please Upload
+                </span>
+              </div>
+            )}
           </div>
+
           <h2 className="text-3xl font-extrabold mb-6 text-center text-gray-900">
             User Settings
           </h2>
-          
+
           {/* Options */}
           {!activeOption && (
             <div className="space-y-4">
