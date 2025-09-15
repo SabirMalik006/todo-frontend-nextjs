@@ -458,7 +458,7 @@ export default function TodoPage() {
                                         if (
                                           col.name.toLowerCase() === "pending"
                                         ) {
-                                          colorClass = "bg-red-400"; // pending
+                                          colorClass = "bg-yellow-400"; // pending
                                         } else if (
                                           col.name.toLowerCase() === "done"
                                         ) {
