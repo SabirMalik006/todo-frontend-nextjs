@@ -66,56 +66,53 @@ export default function Settings() {
   };
 
   const handleSave = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (activeOption === "name") {
-      await handleChangeName();
-      return;
-    }
+  if (activeOption === "name") {
+    await handleChangeName();
+    return;
+  }
 
-    // 🔒 password validation
-    if (activeOption === "password") {
-      if (newPassword !== confirmPassword) {
-        toast.error("Passwords do not match");
-        return;
-      }
-      if (!oldPassword || !newPassword) {
-        toast.error(" Please fill all password fields");
-        return;
-      }
-    }
+  // prepare data to send
+  const token = localStorage.getItem("accessToken");
+  let uploadedImageUrl = null;
+  let uploadedImageId = null;
 
-    try {
-      const token = localStorage.getItem("accessToken");
-      let uploadedImageUrl = null;
+  try {
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append("image", imageFile);
 
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append("image", imageFile);
-
-        const uploadRes = await api.post("/image/upload", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        uploadedImageUrl = uploadRes.data.file.path;
-        toast.success(" Image uploaded successfully!");
-      }
-
-      const res = await api.put(
-        "/user/update-user",
-        {
-          oldPassword,
-          newPassword,
-          image: uploadedImageUrl,
+      const uploadRes = await api.post("/image/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      });
+
+      uploadedImageUrl = uploadRes.data.file.path;
+      uploadedImageId = uploadRes.data.file.filename;
+    }
+
+    // build request body dynamically
+    const body = {};
+    if (uploadedImageUrl) {
+      body.image = uploadedImageUrl;
+      body.imageId = uploadedImageId;
+    }
+    if (activeOption === "password") {
+      body.oldPassword = oldPassword;
+      body.newPassword = newPassword;
+    }
+
+    // only send if there's something to update
+    if (Object.keys(body).length > 0) {
+      const res = await api.put("/user/update-user", body, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (res.status === 200) {
-        toast.success(res.data.message || " Profile updated successfully!");
+        toast.success(res.data.message || "Profile updated successfully!");
         setOldPassword("");
         setNewPassword("");
         setConfirmPassword("");
@@ -125,16 +122,18 @@ export default function Settings() {
 
         window.dispatchEvent(new Event("userUpdated"));
       }
-    } catch (err) {
-      let msg = " Password is incorrect";
-      if (err.response?.data?.message === "Invalid password") {
-        msg = "❌ Wrong current password";
-      } else if (err.response?.data?.message === "Passwords do not match") {
-        msg = "❌ Passwords do not match";
-      }
-      toast.error(msg);
     }
-  };
+  } catch (err) {
+    let msg = "⚠️ Something went wrong";
+    if (err.response?.data?.message === "Invalid password") {
+      msg = "❌ Wrong current password";
+    } else if (err.response?.data?.message === "Passwords do not match") {
+      msg = "❌ Passwords do not match";
+    }
+    toast.error(msg);
+  }
+};
+
 
   return (
     <>
