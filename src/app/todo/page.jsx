@@ -261,7 +261,7 @@ export default function TodoPage() {
   };
 
   const onDragEnd = async (result) => {
-    setIsDragging(false); 
+    setIsDragging(false);
 
     const { source, destination, draggableId } = result;
     if (!destination) return;
@@ -286,14 +286,11 @@ export default function TodoPage() {
 
     destCol.todos.splice(destination.index, 0, moved);
 
-    
     sourceCol.todos.forEach((t, i) => (t.order = i + 1));
     destCol.todos.forEach((t, i) => (t.order = i + 1));
 
-    
     setColumns(newColumns);
 
-    
     toast.success(` "${moved.title}" moved to "${destCol.name}"`, {
       autoClose: 2000,
     });
@@ -301,10 +298,8 @@ export default function TodoPage() {
     try {
       const headers = getAuthHeaders();
 
-    
       await api.put(`/todo/${draggableId}`, { column: moved.column }, headers);
 
-    
       const orderData = newColumns.flatMap((col) =>
         (col.todos || []).map((t) => ({
           id: t._id,
@@ -358,7 +353,7 @@ export default function TodoPage() {
           <div
             ref={boardRef}
             onMouseDown={handleMouseDown}
-            className="flex gap-6 bg-[#e0dee6]  px-6 lg:px-10 py-4 items-start overflow-x-auto h-[calc(100vh-100px)] scrollbar-hide cursor-grab active:cursor-grabbing"
+            className="flex gap-6 bg-[#e0dee6] px-6 lg:px-10 py-4 items-start overflow-x-auto h-[calc(100vh-50px)] scrollbar-hide select-none"
           >
             {columns.map((col) => (
               <Droppable key={col._id} droppableId={String(col._id)}>
@@ -366,7 +361,7 @@ export default function TodoPage() {
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col w-full min-h-[150px]"
+                    className="bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[350px] max-w-[1200px] w-full min-h-[130px]"
                   >
                     <div className="flex justify-between mb-3 relative">
                       <h3
@@ -394,7 +389,7 @@ export default function TodoPage() {
                           }}
                           className="p-2 rounded-full hover:bg-[#c5b8ff] duration-300"
                         >
-                          <TbDotsVertical className="w-5 h-5 text-[#2B1887]" />
+                          <TbDotsVertical className="w-5 h-5 text-[#2B1887] cursor-pointer" />
                         </button>
 
                         {activeMenu === col._id && (
