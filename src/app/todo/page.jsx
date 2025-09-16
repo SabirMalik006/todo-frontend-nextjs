@@ -18,14 +18,14 @@ export default function TodoPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState(null);
   const [priority, setPriority] = useState("low");
-
-
   const [isDragging, setIsDragging] = useState(false);
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [renameColumnName, setRenameColumnName] = useState("");
+  const [columnToRename, setColumnToRename] = useState(null);
 
   const boardRef = useRef(null);
   let isDown = false;
   let startX, scrollLeft;
-
 
   const handleMouseDown = (e) => {
     if (isDragging) return;
@@ -38,7 +38,7 @@ export default function TodoPage() {
       if (!isDown) return;
       e.preventDefault();
       const x = e.pageX - boardRef.current.offsetLeft;
-      const walk = (x - startX) * 1.2; 
+      const walk = (x - startX) * 1.2;
       boardRef.current.scrollLeft = scrollLeft - walk;
     };
 
@@ -52,14 +52,11 @@ export default function TodoPage() {
     window.addEventListener("mouseup", handleMouseUp);
   };
 
-  
   const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
 
-  
   const [activeColumnForNewTodo, setActiveColumnForNewTodo] = useState(null);
 
-  
   const [activeMenu, setActiveMenu] = useState(null);
 
   const getAuthHeaders = () => {
@@ -98,14 +95,12 @@ export default function TodoPage() {
     fetchTodos();
   }, []);
 
-  
   useEffect(() => {
     const handleClickOutside = () => setActiveMenu(null);
     window.addEventListener("click", handleClickOutside);
     return () => window.removeEventListener("click", handleClickOutside);
   }, []);
 
-  
   const openAddTodoForColumn = (colId) => {
     setEditingTodo(null);
     setTitle("");
@@ -115,7 +110,6 @@ export default function TodoPage() {
     setIsModalOpen(true);
   };
 
-  
   const openModalForEdit = (todo) => {
     setEditingTodo(todo);
     setTitle(todo.title || "");
@@ -133,7 +127,6 @@ export default function TodoPage() {
       const headers = getAuthHeaders();
 
       if (editingTodo) {
-        // Update existing
         const payload = {
           title,
           description,
@@ -174,7 +167,6 @@ export default function TodoPage() {
 
         toast.success("Todo updated ✏️");
       } else {
-  
         let targetColId = activeColumnForNewTodo;
         if (!targetColId) {
           const defaultCol = columns.find((c) => c.name === "todo");
@@ -208,7 +200,6 @@ export default function TodoPage() {
         toast.success("Todo added ✅");
       }
 
-      // reset modal
       setTitle("");
       setDescription("");
       setPriority("low");
@@ -259,6 +250,36 @@ export default function TodoPage() {
       toast.error(err.response?.data?.message || "Failed to delete column ❌");
     }
   };
+
+ const renameColumn = (colId) => {
+  const col = columns.find((c) => c._id === colId);
+  if (col) {
+    setColumnToRename(col);                 
+    setRenameColumnName(col.name);          
+    setIsRenameModalOpen(true);             
+  }
+};
+
+const handleRenameColumn = async () => {
+  if (!renameColumnName.trim()) return toast.error("Column name cannot be empty ❌");
+
+  try {
+    const res = await api.put(`/column/${columnToRename._id}`, { name: renameColumnName.trim() });
+
+    if (res.status === 200) {
+      toast.success("Column renamed ✅");
+      setIsRenameModalOpen(false);
+      setRenameColumnName("");
+      fetchTodos();
+    } else {
+      toast.error("Failed to rename column ❌");
+    }
+  } catch (err) {
+    toast.error("Failed to rename column ❌");
+    console.error("renameColumn error:", err.response?.data || err.message);
+  }
+};
+
 
   const onDragEnd = async (result) => {
     setIsDragging(false);
@@ -361,18 +382,19 @@ export default function TodoPage() {
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[350px] max-w-[1200px] w-full min-h-[130px]"
+                    className="bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[300px] w-full min-h-[200px] max-h-full- overflow-y-auto"
                   >
+                    {/* Column Header */}
                     <div className="flex justify-between mb-3 relative">
                       <h3
-                        className={`font-semibold text-[#2B1887] ${
+                        className={`font-semibold text-[#2B1887] break-words ${
                           columns.length > 6
-                            ? "text-md"
+                            ? "text-sm sm:text-base"
                             : columns.length > 4
-                            ? "text-xl"
+                            ? "text-lg sm:text-xl"
                             : columns.length > 2
-                            ? "text-2xl"
-                            : "text-3xl"
+                            ? "text-xl sm:text-2xl"
+                            : "text-2xl sm:text-3xl"
                         }`}
                       >
                         {col.name}
@@ -396,7 +418,7 @@ export default function TodoPage() {
                           <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg z-20">
                             <ul className="flex flex-col text-sm">
                               <li
-                                className="px-4 py-2 text-gray-800 hover:scale-103 transform duration-300  cursor-pointer"
+                                className="px-4 py-2 text-gray-800 hover:scale-103 transform duration-300 cursor-pointer"
                                 onClick={() => {
                                   setActiveMenu(null);
                                   openAddTodoForColumn(col._id);
@@ -405,7 +427,16 @@ export default function TodoPage() {
                                 ➕ Add Todo
                               </li>
                               <li
-                                className="px-4 py-2 text-gray-800  cursor-pointer hover:scale-103 transform duration-300"
+                                className="px-4 py-2 text-gray-800 cursor-pointer hover:scale-103 transform duration-300"
+                                onClick={() => {
+                                  setActiveMenu(null);
+                                  renameColumn(col._id);
+                                }}
+                              >
+                                ✏️ Rename
+                              </li>
+                              <li
+                                className="px-4 py-2 text-gray-800 cursor-pointer hover:scale-103 transform duration-300"
                                 onClick={() => {
                                   setActiveMenu(null);
                                   deleteColumn(col._id);
@@ -419,6 +450,7 @@ export default function TodoPage() {
                       </div>
                     </div>
 
+                    {/* Todos */}
                     <div className="flex flex-col gap-3">
                       {(col.todos || []).map((todo, index) => (
                         <Draggable
@@ -431,22 +463,24 @@ export default function TodoPage() {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`relative bg-[#e9e8ee] p-3 rounded-lg shadow ${
+                              className={`relative bg-[#e9e8ee] p-3 rounded-lg shadow break-words ${
                                 snapshot.isDragging
                                   ? "opacity-95 scale-101"
                                   : ""
                               }`}
                             >
-                              <p className="absolute top-0 left-0 bg-black text-white text-sm font-bold px-[5px] flex items-center justify-center shadow rounded-br-2xl">
+                              {/* Index Badge */}
+                              <p className="absolute top-0 left-0 bg-black text-white text-xs sm:text-sm font-bold px-[6px] flex items-center justify-center shadow rounded-br-2xl">
                                 {index + 1}
                               </p>
 
+                              {/* Todo Content */}
                               <div
                                 onClick={() => openModalForEdit(todo)}
                                 className="mb-3 cursor-pointer"
                               >
-                                <div>
-                                  <p className="text-lg font-semibold text-black">
+                                <div className="relative pr-6">
+                                  <p className="text-base sm:text-lg font-semibold text-black break-words">
                                     {todo.title}
                                   </p>
                                   <MdDeleteOutline
@@ -454,35 +488,36 @@ export default function TodoPage() {
                                       e.stopPropagation();
                                       deleteTodo(todo._id);
                                     }}
-                                    className="absolute top-3 right-2 text-red-500 cursor-pointer hover:scale-110 duration-300 w-4 h-4"
+                                    className="absolute top-0 right-0 text-red-500 cursor-pointer hover:scale-110 duration-300 w-4 h-4"
                                   />
                                 </div>
-                                <p className="text-gray-600 text-sm">
+                                <p className="text-gray-600 text-xs sm:text-sm break-words">
                                   {todo.description || "No description"}
                                 </p>
                               </div>
 
+                              {/* Todo Footer */}
                               <div className="flex items-center justify-between w-full">
                                 <div className="flex items-center gap-3 w-full justify-between">
                                   <div className="flex gap-1 items-center">
-                                    <p className="bg-[#ECB811] text-white text-sm font-semibold px-2 py-1 rounded-lg">
+                                    <p className="bg-[#ECB811] text-white text-xs sm:text-sm font-semibold px-2 py-1 rounded-lg">
                                       {todo.day}
                                     </p>
                                     <div className="flex gap-1">
                                       {(() => {
-                                        let colorClass = "bg-[#adaac2]"; 
+                                        let colorClass = "bg-[#adaac2]";
                                         if (
                                           col.name.toLowerCase() === "pending"
                                         ) {
-                                          colorClass = "bg-yellow-400"; 
+                                          colorClass = "bg-yellow-400";
                                         } else if (
                                           col.name.toLowerCase() === "done"
                                         ) {
-                                          colorClass = "bg-green-400"; 
+                                          colorClass = "bg-green-400";
                                         } else if (
                                           col.name.toLowerCase() !== "todo"
                                         ) {
-                                          colorClass = "bg-blue-400"; 
+                                          colorClass = "bg-blue-400";
                                         }
                                         return (
                                           <>
@@ -499,7 +534,7 @@ export default function TodoPage() {
                                   </div>
 
                                   <span
-                                    className={`px-2 py-1 rounded text-white text-sm ${
+                                    className={`px-2 py-1 rounded text-white text-xs sm:text-sm ${
                                       todo.priority === "high"
                                         ? "bg-red-500"
                                         : todo.priority === "medium"
@@ -619,6 +654,43 @@ border px-3 py-2 rounded-lg w-full mb-4"
               </button>
               <button
                 onClick={saveColumn}
+                className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:scale-105 duration-300 cursor-pointer"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isRenameModalOpen && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50">
+          <div className="bg-white p-6 rounded-2xl shadow-lg w-[400px]">
+            <h2 className="text-2xl font-bold text-[#2B1887] mb-4">
+              Rename Column
+            </h2>
+
+            <label className="block text-gray-700 mb-1">New Column Name</label>
+            <input
+              type="text"
+              value={renameColumnName}
+              onChange={(e) => setRenameColumnName(e.target.value)}
+              placeholder="Enter new column name"
+              className="border px-3 py-2 rounded-lg w-full mb-4"
+            />
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setIsRenameModalOpen(false);
+                  setRenameColumnName("");
+                }}
+                className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRenameColumn} // 🔹 function to call update API
                 className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:scale-105 duration-300 cursor-pointer"
               >
                 Save
