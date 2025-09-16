@@ -488,7 +488,7 @@ const handleRenameColumn = async () => {
                                       e.stopPropagation();
                                       deleteTodo(todo._id);
                                     }}
-                                    className="absolute top-0 right-0 text-red-500 cursor-pointer hover:scale-110 duration-300 w-4 h-4"
+                                    className="absolute top-0 right-0 text-red-500 cursor-pointer hover:scale-110 duration-300 w-5 h-5"
                                   />
                                 </div>
                                 <p className="text-gray-600 text-xs sm:text-sm break-words">
