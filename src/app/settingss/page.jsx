@@ -46,7 +46,7 @@ export default function Settings() {
     let uploadedImageId = null;
 
     try {
-      // Upload image if selected
+      
       if (imageFile) {
         const formData = new FormData();
         formData.append("image", imageFile);
@@ -62,7 +62,7 @@ export default function Settings() {
         uploadedImageId = uploadRes.data.file.filename;
       }
 
-      // Build request body
+      
       const body = {};
       if (uploadedImageUrl) {
         body.image = uploadedImageUrl;
@@ -157,7 +157,7 @@ export default function Settings() {
             <input
               type="text"
               placeholder="Enter new name"
-              value={name}
+              
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none text-black focus:ring-2 focus:ring-indigo-500"
             />

@@ -19,16 +19,16 @@ export default function TodoPage() {
   const [editingTodo, setEditingTodo] = useState(null);
   const [priority, setPriority] = useState("low");
 
-  // new state for drag/scroll conflict
+
   const [isDragging, setIsDragging] = useState(false);
 
   const boardRef = useRef(null);
   let isDown = false;
   let startX, scrollLeft;
 
-  // ---- Grab to Scroll Logic (disabled when dragging todos) ----
+
   const handleMouseDown = (e) => {
-    if (isDragging) return; // 🚫 stop board scrolling while dragging todos
+    if (isDragging) return;
 
     isDown = true;
     startX = e.pageX - boardRef.current.offsetLeft;
@@ -38,7 +38,7 @@ export default function TodoPage() {
       if (!isDown) return;
       e.preventDefault();
       const x = e.pageX - boardRef.current.offsetLeft;
-      const walk = (x - startX) * 1.2; // multiplier = scroll speed
+      const walk = (x - startX) * 1.2; 
       boardRef.current.scrollLeft = scrollLeft - walk;
     };
 
@@ -52,14 +52,14 @@ export default function TodoPage() {
     window.addEventListener("mouseup", handleMouseUp);
   };
 
-  // column creation modal
+  
   const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
 
-  // the column id where a new todo should be created
+  
   const [activeColumnForNewTodo, setActiveColumnForNewTodo] = useState(null);
 
-  // track which column’s menu is open
+  
   const [activeMenu, setActiveMenu] = useState(null);
 
   const getAuthHeaders = () => {
@@ -98,14 +98,14 @@ export default function TodoPage() {
     fetchTodos();
   }, []);
 
-  // close menu on outside click
+  
   useEffect(() => {
     const handleClickOutside = () => setActiveMenu(null);
     window.addEventListener("click", handleClickOutside);
     return () => window.removeEventListener("click", handleClickOutside);
   }, []);
 
-  // open modal to add todo inside a specific column
+  
   const openAddTodoForColumn = (colId) => {
     setEditingTodo(null);
     setTitle("");
@@ -115,7 +115,7 @@ export default function TodoPage() {
     setIsModalOpen(true);
   };
 
-  // open modal for editing an existing todo
+  
   const openModalForEdit = (todo) => {
     setEditingTodo(todo);
     setTitle(todo.title || "");
@@ -174,7 +174,7 @@ export default function TodoPage() {
 
         toast.success("Todo updated ✏️");
       } else {
-        // Create new todo
+  
         let targetColId = activeColumnForNewTodo;
         if (!targetColId) {
           const defaultCol = columns.find((c) => c.name === "todo");
@@ -353,7 +353,7 @@ export default function TodoPage() {
           <div
             ref={boardRef}
             onMouseDown={handleMouseDown}
-            className="flex gap-6 bg-[#e0dee6] px-6 lg:px-10 py-4 items-start overflow-x-auto h-[calc(100vh-50px)] scrollbar-hide select-none"
+            className="flex gap-6 bg-[#e0dee6] px-6 lg:px-10 py-4 items-start overflow-x-auto h-[calc(100vh-50px)] select-none"
           >
             {columns.map((col) => (
               <Droppable key={col._id} droppableId={String(col._id)}>
@@ -470,19 +470,19 @@ export default function TodoPage() {
                                     </p>
                                     <div className="flex gap-1">
                                       {(() => {
-                                        let colorClass = "bg-[#adaac2]"; // default: todo = gray
+                                        let colorClass = "bg-[#adaac2]"; 
                                         if (
                                           col.name.toLowerCase() === "pending"
                                         ) {
-                                          colorClass = "bg-yellow-400"; // pending
+                                          colorClass = "bg-yellow-400"; 
                                         } else if (
                                           col.name.toLowerCase() === "done"
                                         ) {
-                                          colorClass = "bg-green-400"; // done
+                                          colorClass = "bg-green-400"; 
                                         } else if (
                                           col.name.toLowerCase() !== "todo"
                                         ) {
-                                          colorClass = "bg-blue-400"; // all other columns
+                                          colorClass = "bg-blue-400"; 
                                         }
                                         return (
                                           <>

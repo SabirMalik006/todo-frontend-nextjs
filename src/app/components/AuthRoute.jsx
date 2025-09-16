@@ -87,7 +87,7 @@ const AuthRoute = ({ children, reverse = false }) => {
         localStorage.removeItem("refreshToken");
         router.replace("/login");
       }
-    }, 1 * 60 * 1000); // 3 minutes
+    }, 15 * 60 * 1000); // 3 minutes
 
     return () => clearInterval(refreshInterval);
   }, [router]);
