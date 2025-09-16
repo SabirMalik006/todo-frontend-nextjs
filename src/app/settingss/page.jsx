@@ -46,7 +46,6 @@ export default function Settings() {
     let uploadedImageId = null;
 
     try {
-      
       if (imageFile) {
         const formData = new FormData();
         formData.append("image", imageFile);
@@ -62,7 +61,6 @@ export default function Settings() {
         uploadedImageId = uploadRes.data.file.filename;
       }
 
-      
       const body = {};
       if (uploadedImageUrl) {
         body.image = uploadedImageUrl;
@@ -123,33 +121,42 @@ export default function Settings() {
         <div className="w-full max-w-lg bg-[#f7f2f2] rounded-2xl shadow-xl px-10 py-12 mb-4">
           {/* Profile Image Section */}
           <div className="flex flex-col items-center">
-            {imagePreview ? (
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="w-32 h-32 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center text-center">
-                <span className="text-gray-600 text-base font-medium">
-                  Please Upload
-                </span>
-              </div>
-            )}
-
-            <label className="mt-3  block text-gray-700 font-medium">
+            <label className="mt-3 block text-gray-700 font-medium">
               Change Profile Image
             </label>
+
+            {/* Hidden input */}
             <input
               type="file"
+              id="fileInput"
               accept="image/*"
               onChange={(e) => {
                 const file = e.target.files[0];
                 setImageFile(file);
                 setImagePreview(URL.createObjectURL(file));
               }}
-              className="mt-2 w-full py-1 px-3 cursor-pointer rounded text-black border border-black"
+              className="hidden" // hide the raw input
             />
+
+            {/* Preview area as clickable label */}
+            <label
+              htmlFor="fileInput" // this makes preview clickable
+              className="cursor-pointer mt-2 inline-block"
+            >
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-32 h-32 rounded-full object-cover hover:opacity-80 transition duration-200"
+                />
+              ) : (
+                <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center text-center hover:opacity-80 transition duration-200">
+                  <span className="text-gray-600 text-base font-medium">
+                    Please Upload
+                  </span>
+                </div>
+              )}
+            </label>
           </div>
 
           {/* Change Name Section */}
@@ -157,9 +164,21 @@ export default function Settings() {
             <input
               type="text"
               placeholder="Enter new name"
-              
+              value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none text-black focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          {/* email */}
+
+          <div className="mt-3">
+            <input
+              type="text"
+              placeholder="Email"
+              value={user?.email || ""}
+              disabled
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none text-black bg-gray-200 cursor-not-allowed opacity-70"
             />
           </div>
 

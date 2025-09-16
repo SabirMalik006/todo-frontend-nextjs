@@ -312,7 +312,7 @@ const handleRenameColumn = async () => {
 
     setColumns(newColumns);
 
-    toast.success(` "${moved.title}" moved to "${destCol.name}"`, {
+    toast.success(` ${moved.title} moved to ${destCol.name}`, {
       autoClose: 2000,
     });
 
@@ -361,7 +361,7 @@ const handleRenameColumn = async () => {
         <div className="flex justify-end px-10 mb-4">
           <button
             onClick={() => setIsColumnModalOpen(true)}
-            className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:bg-[#4321a8] duration-300"
+            className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:bg-[#4321a8] duration-300 cursor-pointer "
           >
             + Add Column
           </button>
@@ -463,7 +463,7 @@ const handleRenameColumn = async () => {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`relative bg-[#e9e8ee] p-3 rounded-lg shadow break-words ${
+                              className={`relative bg-[#e9e8ee] p-5 rounded-lg shadow break-words ${
                                 snapshot.isDragging
                                   ? "opacity-95 scale-101"
                                   : ""
@@ -492,7 +492,7 @@ const handleRenameColumn = async () => {
                                   />
                                 </div>
                                 <p className="text-gray-600 text-xs sm:text-sm break-words">
-                                  {todo.description || "No description"}
+                                  {todo.description }
                                 </p>
                               </div>
 
@@ -500,41 +500,14 @@ const handleRenameColumn = async () => {
                               <div className="flex items-center justify-between w-full">
                                 <div className="flex items-center gap-3 w-full justify-between">
                                   <div className="flex gap-1 items-center">
-                                    <p className="bg-[#ECB811] text-white text-xs sm:text-sm font-semibold px-2 py-1 rounded-lg">
+                                    <p className="bg-[#ECB811] text-white text-xs sm:text-sm font-semibold px-5 py-2 rounded">
                                       {todo.day}
                                     </p>
-                                    <div className="flex gap-1">
-                                      {(() => {
-                                        let colorClass = "bg-[#adaac2]";
-                                        if (
-                                          col.name.toLowerCase() === "pending"
-                                        ) {
-                                          colorClass = "bg-yellow-400";
-                                        } else if (
-                                          col.name.toLowerCase() === "done"
-                                        ) {
-                                          colorClass = "bg-green-400";
-                                        } else if (
-                                          col.name.toLowerCase() !== "todo"
-                                        ) {
-                                          colorClass = "bg-blue-400";
-                                        }
-                                        return (
-                                          <>
-                                            <span
-                                              className={`${colorClass} h-[12px] w-[24px] rounded-bl-2xl`}
-                                            ></span>
-                                            <span
-                                              className={`${colorClass} h-[12px] w-[24px] rounded-bl-2xl`}
-                                            ></span>
-                                          </>
-                                        );
-                                      })()}
-                                    </div>
+                                    
                                   </div>
 
                                   <span
-                                    className={`px-2 py-1 rounded text-white text-xs sm:text-sm ${
+                                    className={`px-5 py-2 rounded text-white text-xs sm:text-sm ${
                                       todo.priority === "high"
                                         ? "bg-red-500"
                                         : todo.priority === "medium"
