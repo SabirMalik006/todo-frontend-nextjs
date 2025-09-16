@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import AuthRoute from "../components/AuthRoute";
 import { FiMoreVertical } from "react-icons/fi";
-import { HiOutlineMenuAlt4 } from "react-icons/hi";
+import { TbDotsVertical } from "react-icons/tb";
 import { IoMdDoneAll } from "react-icons/io";
 
 export default function TodoPage() {
@@ -90,7 +90,7 @@ export default function TodoPage() {
       console.log("Fetched columns:", withTodos);
     } catch (err) {
       console.error("fetchTodos error:", err.response?.data || err.message);
-      toast.error("Failed to fetch data ❌");
+      toast.error("Failed to fetch data ");
     }
   };
 
@@ -261,10 +261,11 @@ export default function TodoPage() {
   };
 
   const onDragEnd = async (result) => {
-    setIsDragging(false); // ✅ reset when drag ends
+    setIsDragging(false); 
 
     const { source, destination, draggableId } = result;
     if (!destination) return;
+
     const srcColId = source.droppableId;
     const dstColId = destination.droppableId;
     if (srcColId === dstColId && source.index === destination.index) return;
@@ -285,15 +286,25 @@ export default function TodoPage() {
 
     destCol.todos.splice(destination.index, 0, moved);
 
+    
     sourceCol.todos.forEach((t, i) => (t.order = i + 1));
     destCol.todos.forEach((t, i) => (t.order = i + 1));
 
+    
     setColumns(newColumns);
+
+    
+    toast.success(` "${moved.title}" moved to "${destCol.name}"`, {
+      autoClose: 2000,
+    });
 
     try {
       const headers = getAuthHeaders();
+
+    
       await api.put(`/todo/${draggableId}`, { column: moved.column }, headers);
 
+    
       const orderData = newColumns.flatMap((col) =>
         (col.todos || []).map((t) => ({
           id: t._id,
@@ -305,7 +316,7 @@ export default function TodoPage() {
       await api.put("/todo/update-order", { orderData }, headers);
     } catch (err) {
       console.error("onDragEnd error:", err.response?.data || err.message);
-      toast.error("Failed to save changes");
+      toast.error("❌ Failed to save changes, refreshing...");
       fetchTodos();
     }
   };
@@ -319,7 +330,7 @@ export default function TodoPage() {
       setColumns((prev) => [...prev, { ...created, todos: [] }]);
       setNewColumnName("");
       setIsColumnModalOpen(false);
-      toast.success("Column added ✅");
+      toast.success("Column added ");
     } catch (err) {
       console.error("saveColumn error:", err.response?.data || err.message);
       toast.error("Failed to create column ❌");
@@ -347,7 +358,7 @@ export default function TodoPage() {
           <div
             ref={boardRef}
             onMouseDown={handleMouseDown}
-            className="flex gap-6 bg-[#e0dee6] px-10 py-4 items-start overflow-x-auto h-[calc(100vh-100px)] scrollbar-hide cursor-grab active:cursor-grabbing"
+            className="flex gap-6 bg-[#e0dee6]  px-6 lg:px-10 py-4 items-start overflow-x-auto h-[calc(100vh-100px)] scrollbar-hide cursor-grab active:cursor-grabbing"
           >
             {columns.map((col) => (
               <Droppable key={col._id} droppableId={String(col._id)}>
@@ -358,7 +369,17 @@ export default function TodoPage() {
                     className="bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col w-full min-h-[150px]"
                   >
                     <div className="flex justify-between mb-3 relative">
-                      <h3 className="text-3xl text-[#2B1887] font-semibold">
+                      <h3
+                        className={`font-semibold text-[#2B1887] ${
+                          columns.length > 6
+                            ? "text-md"
+                            : columns.length > 4
+                            ? "text-xl"
+                            : columns.length > 2
+                            ? "text-2xl"
+                            : "text-3xl"
+                        }`}
+                      >
                         {col.name}
                       </h3>
 
@@ -373,7 +394,7 @@ export default function TodoPage() {
                           }}
                           className="p-2 rounded-full hover:bg-[#c5b8ff] duration-300"
                         >
-                          <HiOutlineMenuAlt4 className="w-5 h-5 text-[#2B1887]" />
+                          <TbDotsVertical className="w-5 h-5 text-[#2B1887]" />
                         </button>
 
                         {activeMenu === col._id && (

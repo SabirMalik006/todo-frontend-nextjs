@@ -5,6 +5,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import AuthRoute from "../components/AuthRoute";
+import api from "../utils/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,8 +16,8 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        "https://todo-backend-w-nextjs-production-6329.up.railway.app/api/auth/login",
+      const res = await api.post(
+        "/auth/login",
         {
           email,
           password,
