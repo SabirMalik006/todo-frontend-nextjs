@@ -38,7 +38,7 @@ export default function LoginPage() {
     <>
       <AuthRoute reverse>
   <main className="relative flex h-screen w-full login-page">
-    {/* Background Shape */}
+    
     <div className="absolute inset-0">
     <svg
         className="w-full h-full"

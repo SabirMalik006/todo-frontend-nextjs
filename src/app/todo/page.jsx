@@ -9,6 +9,7 @@ import AuthRoute from "../components/AuthRoute";
 import { FiMoreVertical } from "react-icons/fi";
 import { TbDotsVertical } from "react-icons/tb";
 import { IoMdDoneAll } from "react-icons/io";
+import { LiaEdit } from "react-icons/lia";
 
 export default function TodoPage() {
   const [columns, setColumns] = useState([]);
@@ -22,6 +23,13 @@ export default function TodoPage() {
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [renameColumnName, setRenameColumnName] = useState("");
   const [columnToRename, setColumnToRename] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedTodo, setSelectedTodo] = useState(null);
+
+  const openViewModal = (todo) => {
+    setSelectedTodo(todo);
+    setIsViewModalOpen(true);
+  };
 
   const boardRef = useRef(null);
   let isDown = false;
@@ -197,7 +205,7 @@ export default function TodoPage() {
           )
         );
 
-        toast.success("Todo added ✅");
+        toast.success("Todo added ");
       }
 
       setTitle("");
@@ -229,7 +237,7 @@ export default function TodoPage() {
       toast.success("Todo deleted 🗑️");
     } catch (err) {
       console.error("deleteTodo error:", err.response?.data || err.message);
-      toast.error("Failed to delete ❌");
+      toast.error("Failed to delete ");
     }
   };
 
@@ -247,39 +255,41 @@ export default function TodoPage() {
         "deleteColumn error:",
         err.response?.data || err.message || err
       );
-      toast.error(err.response?.data?.message || "Failed to delete column ❌");
+      toast.error(err.response?.data?.message || "Failed to delete column ");
     }
   };
 
- const renameColumn = (colId) => {
-  const col = columns.find((c) => c._id === colId);
-  if (col) {
-    setColumnToRename(col);                 
-    setRenameColumnName(col.name);          
-    setIsRenameModalOpen(true);             
-  }
-};
-
-const handleRenameColumn = async () => {
-  if (!renameColumnName.trim()) return toast.error("Column name cannot be empty ❌");
-
-  try {
-    const res = await api.put(`/column/${columnToRename._id}`, { name: renameColumnName.trim() });
-
-    if (res.status === 200) {
-      toast.success("Column renamed ✅");
-      setIsRenameModalOpen(false);
-      setRenameColumnName("");
-      fetchTodos();
-    } else {
-      toast.error("Failed to rename column ❌");
+  const renameColumn = (colId) => {
+    const col = columns.find((c) => c._id === colId);
+    if (col) {
+      setColumnToRename(col);
+      setRenameColumnName(col.name);
+      setIsRenameModalOpen(true);
     }
-  } catch (err) {
-    toast.error("Failed to rename column ❌");
-    console.error("renameColumn error:", err.response?.data || err.message);
-  }
-};
+  };
 
+  const handleRenameColumn = async () => {
+    if (!renameColumnName.trim())
+      return toast.error("Column name cannot be empty ");
+
+    try {
+      const res = await api.put(`/column/${columnToRename._id}`, {
+        name: renameColumnName.trim(),
+      });
+
+      if (res.status === 200) {
+        toast.success("Column renamed ");
+        setIsRenameModalOpen(false);
+        setRenameColumnName("");
+        fetchTodos();
+      } else {
+        toast.error("Failed to rename column ");
+      }
+    } catch (err) {
+      toast.error("Failed to rename column ");
+      console.error("renameColumn error:", err.response?.data || err.message);
+    }
+  };
 
   const onDragEnd = async (result) => {
     setIsDragging(false);
@@ -400,7 +410,7 @@ const handleRenameColumn = async () => {
                         {col.name}
                       </h3>
 
-                      {/* Hamburger menu */}
+
                       <div className="relative">
                         <button
                           onClick={(e) => {
@@ -450,7 +460,7 @@ const handleRenameColumn = async () => {
                       </div>
                     </div>
 
-                    {/* Todos */}
+
                     <div className="flex flex-col gap-3">
                       {(col.todos || []).map((todo, index) => (
                         <Draggable
@@ -469,18 +479,18 @@ const handleRenameColumn = async () => {
                                   : ""
                               }`}
                             >
-                              {/* Index Badge */}
+
                               <p className="absolute top-0 left-0 bg-black text-white text-xs sm:text-sm font-bold px-[6px] flex items-center justify-center shadow rounded-br-2xl">
                                 {index + 1}
                               </p>
 
-                              {/* Todo Content */}
+
                               <div
-                                onClick={() => openModalForEdit(todo)}
+                                onClick={() => openViewModal(todo)}
                                 className="mb-3 cursor-pointer"
                               >
                                 <div className="relative pr-6">
-                                  <p className="text-base sm:text-lg font-semibold text-black break-words">
+                                  <p className="text-base sm:text-lg font-semibold text-black break-words line-clamp-2">
                                     {todo.title}
                                   </p>
                                   <MdDeleteOutline
@@ -491,19 +501,18 @@ const handleRenameColumn = async () => {
                                     className="absolute top-0 right-0 text-red-500 cursor-pointer hover:scale-110 duration-300 w-5 h-5"
                                   />
                                 </div>
-                                <p className="text-gray-600 text-xs sm:text-sm break-words">
-                                  {todo.description }
+                                <p className="text-gray-600 text-xs sm:text-sm break-words line-clamp-2">
+                                  {todo.description}
                                 </p>
                               </div>
 
-                              {/* Todo Footer */}
+
                               <div className="flex items-center justify-between w-full">
                                 <div className="flex items-center gap-3 w-full justify-between">
                                   <div className="flex gap-1 items-center">
                                     <p className="bg-[#ECB811] text-white text-xs sm:text-sm font-semibold px-5 py-2 rounded">
                                       {todo.day}
                                     </p>
-                                    
                                   </div>
 
                                   <span
@@ -537,7 +546,7 @@ const handleRenameColumn = async () => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50">
           <div className="bg-white p-6 rounded-2xl shadow-lg w-[400px]">
-            <h2 className="text-2xl font-bold text-[#2B1887] mb-4">
+            <h2 className="text-2xl font-bold text-[#2B1887] mb-4 text-center">
               {editingTodo ? "Update Todo" : "Add New Todo"}
             </h2>
 
@@ -597,7 +606,85 @@ const handleRenameColumn = async () => {
         </div>
       )}
 
-      {/* Column Modal */}
+{isViewModalOpen && selectedTodo && (
+  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50">
+    <div className="bg-white p-6 rounded-2xl shadow-lg w-[400px] relative">
+      
+      <button
+        onClick={() => {
+          setIsViewModalOpen(false);
+          openModalForEdit(selectedTodo);
+        }}
+        className="absolute top-7 right-6 text-[#2B1887] cursor-pointer duration-200 text-sm"
+        title="Edit Todo"
+      >
+        <LiaEdit className="text-2xl" />
+      </button>
+
+      
+      <h2 className="text-2xl font-bold text-[#2B1887] mb-6 text-center">
+        Todo Details
+      </h2>
+
+      
+      <div className="space-y-5 text-gray-700 text-base">
+        
+        <div className="border rounded-lg p-3 bg-gray-50 ">
+          <span className="font-semibold text-[#2B1887] text-lg block mb-1">
+            Title 
+          </span>
+          <p className="text-lg break-words whitespace-pre-wrap max-w-full">
+            {selectedTodo.title}
+          </p>
+        </div>
+
+        
+        <div className="border rounded-lg p-3 bg-gray-50 flex items-center">
+          <span className="font-semibold text-[#2B1887] text-lg block mb-1">
+            Priority : &nbsp;
+          </span>
+          <p
+            className={`inline-block px-5 py-1 rounded-md text-white text-md ${
+              selectedTodo.priority === "high"
+                ? "bg-red-500"
+                : selectedTodo.priority === "medium"
+                ? "bg-yellow-500"
+                : "bg-green-500"
+            }`}
+          >
+            {selectedTodo.priority}
+          </p>
+        </div>
+
+      
+        <div className="border rounded-lg p-3 bg-gray-50max-h-[400px] overflow-y-auto">
+          <span className="font-semibold text-[#2B1887] text-lg block mb-1">
+            Description : &nbsp;
+          </span>
+          <p className="text-lg break-words whitespace-pre-wrap max-w-full">
+            {selectedTodo.description || "No description"}
+          </p>
+        </div>
+      </div>
+
+      
+      <div className="flex justify-end mt-6">
+        <button
+          onClick={() => {
+            setIsViewModalOpen(false);
+            setSelectedTodo(null);
+          }}
+          className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-pointer hover:scale-105 duration-200"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+      
       {isColumnModalOpen && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50">
           <div className="bg-white p-6 rounded-2xl shadow-lg w-[400px]">
@@ -663,7 +750,7 @@ border px-3 py-2 rounded-lg w-full mb-4"
                 Cancel
               </button>
               <button
-                onClick={handleRenameColumn} // 🔹 function to call update API
+                onClick={handleRenameColumn} 
                 className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:scale-105 duration-300 cursor-pointer"
               >
                 Save
