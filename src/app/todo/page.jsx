@@ -11,6 +11,7 @@ import { TbDotsVertical } from "react-icons/tb";
 import { IoMdDoneAll } from "react-icons/io";
 import { LiaEdit } from "react-icons/lia";
 
+
 export default function TodoPage() {
   const [columns, setColumns] = useState([]);
   const [title, setTitle] = useState("");
@@ -25,6 +26,8 @@ export default function TodoPage() {
   const [columnToRename, setColumnToRename] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedTodo, setSelectedTodo] = useState(null);
+  const [isSavingColumn, setIsSavingColumn] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   const openViewModal = (todo) => {
     setSelectedTodo(todo);
@@ -62,11 +65,8 @@ export default function TodoPage() {
 
   const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
-
   const [activeColumnForNewTodo, setActiveColumnForNewTodo] = useState(null);
-
   const [activeMenu, setActiveMenu] = useState(null);
-
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     return { headers: { Authorization: `Bearer ${token}` } };
@@ -348,20 +348,55 @@ export default function TodoPage() {
   };
 
   const saveColumn = async () => {
+    if (isSavingColumn) return;
     if (!newColumnName.trim()) return toast.error("Column name required!");
+
+    setIsSavingColumn(true);
+
     try {
       const headers = getAuthHeaders();
-      const res = await api.post("/column", { name: newColumnName }, headers);
-      const created = res.data;
-      setColumns((prev) => [...prev, { ...created, todos: [] }]);
+
+      // 1. Create column
+      const colRes = await api.post("/column", { name: newColumnName }, headers);
+      let createdCol = colRes.data;
+
+      // 2. If first column, create dummy todo
+      if (columns.length === 0) {
+        const dummyPayload = {
+          title: "My first task 🚀",
+          description: "This is a sample todo. You can edit or delete it.",
+          priority: "medium",
+          day: "Today",
+          column: createdCol._id,
+        };
+
+        try {
+          await api.post("/todo", dummyPayload, headers);
+        } catch (err) {
+          console.error("Failed to create dummy todo:", err.response?.data || err.message);
+        }
+      }
+
+      // ✅ 3. Always refetch to get correct column + todos
+      await fetchTodos();
+
+      // Reset UI
       setNewColumnName("");
       setIsColumnModalOpen(false);
-      toast.success("Column added ");
+      toast.success("Column created ✅");
     } catch (err) {
       console.error("saveColumn error:", err.response?.data || err.message);
       toast.error("Failed to create column ❌");
+    } finally {
+      setIsSavingColumn(false);
     }
   };
+
+
+
+
+
+
 
   return (
     <>
@@ -370,11 +405,13 @@ export default function TodoPage() {
       <div className="h-full w-full bg-[#e0dee6] todo pt-15 ">
         <div className="flex justify-end px-10 mb-4">
           <button
-            onClick={() => setIsColumnModalOpen(true)}
-            className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:bg-[#4321a8] duration-300 cursor-pointer "
+            onClick={() => setIsColumnModalOpen(true)} // open the modal instead of direct API call
+            className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:bg-[#4321a8] duration-300 cursor-pointer"
           >
             + Add Column
           </button>
+
+
         </div>
 
         <DragDropContext
@@ -392,20 +429,19 @@ export default function TodoPage() {
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[300px] w-full min-h-[200px] max-h-full- overflow-y-auto"
+                    className="bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[512px]  min-h-[200px] max-h-full overflow-y-auto"
                   >
                     {/* Column Header */}
                     <div className="flex justify-between mb-3 relative">
                       <h3
-                        className={`font-semibold text-[#2B1887] break-words ${
-                          columns.length > 6
-                            ? "text-sm sm:text-base"
-                            : columns.length > 4
+                        className={`font-semibold text-[#2B1887] break-words ${columns.length > 6
+                          ? "text-sm sm:text-base"
+                          : columns.length > 4
                             ? "text-lg sm:text-xl"
                             : columns.length > 2
-                            ? "text-xl sm:text-2xl"
-                            : "text-2xl sm:text-3xl"
-                        }`}
+                              ? "text-xl sm:text-2xl"
+                              : "text-2xl sm:text-3xl"
+                          }`}
                       >
                         {col.name}
                       </h3>
@@ -462,78 +498,79 @@ export default function TodoPage() {
 
 
                     <div className="flex flex-col gap-3">
-                      {(col.todos || []).map((todo, index) => (
-                        <Draggable
-                          key={String(todo._id)}
-                          draggableId={String(todo._id)}
-                          index={index}
-                        >
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className={`relative bg-[#e9e8ee] p-5 rounded-lg shadow break-words ${
-                                snapshot.isDragging
-                                  ? "opacity-95 scale-101"
-                                  : ""
-                              }`}
-                            >
-
-                              <p className="absolute top-0 left-0 bg-black text-white text-xs sm:text-sm font-bold px-[6px] flex items-center justify-center shadow rounded-br-2xl">
-                                {index + 1}
-                              </p>
-
-
+                      {(col.todos && col.todos.length > 0) ? (
+                        col.todos.map((todo, index) => (
+                          <Draggable
+                            key={String(todo._id)}
+                            draggableId={String(todo._id)}
+                            index={index}
+                          >
+                            {(provided, snapshot) => (
                               <div
-                                onClick={() => openViewModal(todo)}
-                                className="mb-3 cursor-pointer"
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className={`relative bg-[#e9e8ee] p-5 rounded-lg shadow break-words ${snapshot.isDragging ? "opacity-95 scale-101" : ""
+                                  }`}
                               >
-                                <div className="relative pr-6">
-                                  <p className="text-base sm:text-lg font-semibold text-black break-words line-clamp-2">
-                                    {todo.title}
-                                  </p>
-                                  <MdDeleteOutline
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      deleteTodo(todo._id);
-                                    }}
-                                    className="absolute top-0 right-0 text-red-500 cursor-pointer hover:scale-110 duration-300 w-5 h-5"
-                                  />
-                                </div>
-                                <p className="text-gray-600 text-xs sm:text-sm break-words line-clamp-2">
-                                  {todo.description}
+                                {/* Todo Number */}
+                                <p className="absolute top-0 left-0 bg-black text-white text-xs sm:text-sm font-bold px-[6px] flex items-center justify-center shadow rounded-br-2xl">
+                                  {index + 1}
                                 </p>
-                              </div>
 
-
-                              <div className="flex items-center justify-between w-full">
-                                <div className="flex items-center gap-3 w-full justify-between">
-                                  <div className="flex gap-1 items-center">
-                                    <p className="bg-[#ECB811] text-white text-xs sm:text-sm font-semibold px-5 py-2 rounded">
-                                      {todo.day}
+                                {/* Todo Title & Delete */}
+                                <div
+                                  onClick={() => openViewModal(todo)}
+                                  className="mb-3 cursor-pointer"
+                                >
+                                  <div className="relative pr-6">
+                                    <p className="text-base sm:text-lg font-semibold text-black break-words line-clamp-2">
+                                      {todo.title}
                                     </p>
+                                    <MdDeleteOutline
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteTodo(todo._id);
+                                      }}
+                                      className="absolute top-0 right-0 text-red-500 cursor-pointer hover:scale-110 duration-300 w-5 h-5"
+                                    />
                                   </div>
+                                  <p className="text-gray-600 text-xs sm:text-sm break-words line-clamp-2">
+                                    {todo.description}
+                                  </p>
+                                </div>
 
-                                  <span
-                                    className={`px-5 py-2 rounded text-white text-xs sm:text-sm ${
-                                      todo.priority === "high"
+                                {/* Todo Footer */}
+                                <div className="flex items-center justify-between w-full">
+                                  <div className="flex items-center gap-3 w-full justify-between">
+                                    <div className="flex gap-1 items-center">
+                                      <p className="bg-[#ECB811] text-white text-xs sm:text-sm font-semibold px-5 py-2 rounded">
+                                        {todo.day}
+                                      </p>
+                                    </div>
+
+                                    <span
+                                      className={`px-5 py-2 rounded text-white text-xs sm:text-sm ${todo.priority === "high"
                                         ? "bg-red-500"
                                         : todo.priority === "medium"
-                                        ? "bg-yellow-500"
-                                        : "bg-green-500"
-                                    }`}
-                                  >
-                                    {todo.priority}
-                                  </span>
+                                          ? "bg-yellow-500"
+                                          : "bg-green-500"
+                                        }`}
+                                    >
+                                      {todo.priority}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
+                            )}
+                          </Draggable>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 text-center mt-5  text-3xl">No todos Here</p>
+                      )}
                       {provided.placeholder}
                     </div>
+
                   </div>
                 )}
               </Droppable>
@@ -606,85 +643,83 @@ export default function TodoPage() {
         </div>
       )}
 
-{isViewModalOpen && selectedTodo && (
-  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50">
-    <div className="bg-white p-6 rounded-2xl shadow-lg w-[400px] relative">
-      
-      <button
-        onClick={() => {
-          setIsViewModalOpen(false);
-          openModalForEdit(selectedTodo);
-        }}
-        className="absolute top-7 right-6 text-[#2B1887] cursor-pointer duration-200 text-sm"
-        title="Edit Todo"
-      >
-        <LiaEdit className="text-2xl" />
-      </button>
+      {isViewModalOpen && selectedTodo && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50">
+          <div className="bg-white p-6 rounded-2xl shadow-lg w-[400px] relative">
 
-      
-      <h2 className="text-2xl font-bold text-[#2B1887] mb-6 text-center">
-        Todo Details
-      </h2>
+            <button
+              onClick={() => {
+                setIsViewModalOpen(false);
+                openModalForEdit(selectedTodo);
+              }}
+              className="absolute top-7 right-6 text-[#2B1887] cursor-pointer duration-200 text-sm"
+              title="Edit Todo"
+            >
+              <LiaEdit className="text-2xl" />
+            </button>
 
-      
-      <div className="space-y-5 text-gray-700 text-base">
-        
-        <div className="border rounded-lg p-3 bg-gray-50 ">
-          <span className="font-semibold text-[#2B1887] text-lg block mb-1">
-            Title 
-          </span>
-          <p className="text-lg break-words whitespace-pre-wrap max-w-full">
-            {selectedTodo.title}
-          </p>
+
+            <h2 className="text-2xl font-bold text-[#2B1887] mb-6 text-center">
+              Todo Details
+            </h2>
+
+
+            <div className="space-y-5 text-gray-700 text-base">
+
+              <div className="rounded-lg p-3 bg-[#eae6f7]">
+                <span className="font-semibold text-[#2B1887] text-lg block mb-1 ">
+                  Title :
+                </span>
+                <p className="text-lg break-words whitespace-pre-wrap max-w-full">
+                  {selectedTodo.title}
+                </p>
+              </div>
+
+              <div className="rounded-lg p-3 flex items-center bg-[#eae6f7]">
+                <span className="font-semibold text-[#2B1887] text-lg block mb-1">
+                  Priority : &nbsp;
+                </span>
+                <p
+                  className={`inline-block px-5 py-1 rounded-md text-white text-md ${selectedTodo.priority === "high"
+                      ? "bg-red-500"
+                      : selectedTodo.priority === "medium"
+                        ? "bg-yellow-500"
+                        : "bg-green-500"
+                    }`}
+                >
+                  {selectedTodo.priority}
+                </p>
+              </div>
+
+              <div className="rounded-lg p-3 max-h-[400px] overflow-y-auto bg-[#eae6f7]">
+                <span className="font-semibold text-[#2B1887] text-lg block mb-1">
+                  Description : &nbsp;
+                </span>
+                <p className="text-lg break-words whitespace-pre-wrap max-w-full">
+                  {selectedTodo.description || "No description"}
+                </p>
+              </div>
+
+            </div>
+
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => {
+                  setIsViewModalOpen(false);
+                  setSelectedTodo(null);
+                }}
+                className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-pointer hover:scale-105 duration-200"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
-
-        
-        <div className="border rounded-lg p-3 bg-gray-50 flex items-center">
-          <span className="font-semibold text-[#2B1887] text-lg block mb-1">
-            Priority : &nbsp;
-          </span>
-          <p
-            className={`inline-block px-5 py-1 rounded-md text-white text-md ${
-              selectedTodo.priority === "high"
-                ? "bg-red-500"
-                : selectedTodo.priority === "medium"
-                ? "bg-yellow-500"
-                : "bg-green-500"
-            }`}
-          >
-            {selectedTodo.priority}
-          </p>
-        </div>
-
-      
-        <div className="border rounded-lg p-3 bg-gray-50max-h-[400px] overflow-y-auto">
-          <span className="font-semibold text-[#2B1887] text-lg block mb-1">
-            Description : &nbsp;
-          </span>
-          <p className="text-lg break-words whitespace-pre-wrap max-w-full">
-            {selectedTodo.description || "No description"}
-          </p>
-        </div>
-      </div>
-
-      
-      <div className="flex justify-end mt-6">
-        <button
-          onClick={() => {
-            setIsViewModalOpen(false);
-            setSelectedTodo(null);
-          }}
-          className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-pointer hover:scale-105 duration-200"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
 
-      
+
       {isColumnModalOpen && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50">
           <div className="bg-white p-6 rounded-2xl shadow-lg w-[400px]">
@@ -699,7 +734,7 @@ export default function TodoPage() {
               onChange={(e) => setNewColumnName(e.target.value)}
               placeholder="Enter column name"
               className="
-border px-3 py-2 rounded-lg w-full mb-4"
+  border px-3 py-2 rounded-lg w-full mb-4"
             />
 
             <div className="flex justify-end gap-3">
@@ -714,10 +749,15 @@ border px-3 py-2 rounded-lg w-full mb-4"
               </button>
               <button
                 onClick={saveColumn}
-                className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:scale-105 duration-300 cursor-pointer"
+                disabled={isSavingColumn} // ✅ disable when saving
+                className={`px-4 py-2 rounded-lg cursor-pointer transition ${isSavingColumn
+                  ? "bg-gray-400 text-white cursor-not-allowed"
+                  : "bg-[#2B1887] text-white hover:scale-105 duration-300"
+                  }`}
               >
-                Save
+                {isSavingColumn ? "Saving..." : "Save"}
               </button>
+
             </div>
           </div>
         </div>
@@ -750,7 +790,7 @@ border px-3 py-2 rounded-lg w-full mb-4"
                 Cancel
               </button>
               <button
-                onClick={handleRenameColumn} 
+                onClick={handleRenameColumn}
                 className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:scale-105 duration-300 cursor-pointer"
               >
                 Save

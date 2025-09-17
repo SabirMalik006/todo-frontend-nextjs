@@ -6,6 +6,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { IoReturnUpBackOutline } from "react-icons/io5";
 import api from "../utils/api";
+import { CiCamera } from "react-icons/ci";
 
 export default function Settings() {
   const [name, setName] = useState("");
@@ -94,7 +95,7 @@ export default function Settings() {
         toast("No changes to save");
       }
     } catch (err) {
-      let msg = "⚠️ Something went wrong";
+      let msg = "Password is Incorrect";
       if (err.response?.data?.message === "Invalid password") {
         msg = "❌ Wrong current password";
       } else if (err.response?.data?.message === "Passwords do not match") {
@@ -150,9 +151,9 @@ export default function Settings() {
                   className="w-32 h-32 rounded-full object-cover hover:opacity-80 transition duration-200"
                 />
               ) : (
-                <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center text-center hover:opacity-80 transition duration-200">
-                  <span className="text-gray-600 text-base font-medium">
-                    Please Upload
+                <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center text-center hover:opacity-80 transition duration-200 mb-4">
+                  <span >
+                    <CiCamera className="h-7 w-7" />
                   </span>
                 </div>
               )}
@@ -161,49 +162,67 @@ export default function Settings() {
 
           {/* Change Name Section */}
           <div className="mt-3">
+            <label htmlFor="name" className="text-lg font-medium text-gray-700">
+              Title
+            </label>
             <input
+              id="name"
               type="text"
               placeholder="Enter new name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none text-black focus:ring-2 focus:ring-indigo-500"
+              className="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none text-black focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
-          {/* email */}
-
+          {/* Email */}
           <div className="mt-3">
+            <label htmlFor="email" className="text-lg font-medium text-gray-700">
+              Email
+            </label>
             <input
+              id="email"
               type="text"
               placeholder="Email"
               value={user?.email || ""}
               disabled
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none text-black bg-gray-200 cursor-not-allowed opacity-70"
+              className="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none text-black bg-gray-200 cursor-not-allowed opacity-70"
             />
           </div>
 
           {/* Change Password Section */}
           <div className="mt-3">
+            <label className="text-lg font-medium text-gray-700">
+              Old Password
+            </label>
             <input
               type="password"
               placeholder="Enter old password"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"
+              className="w-full mt-1 px-4 py-2 border rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"
             />
+
+            <label className="text-lg font-medium text-gray-700">
+              New Password
+            </label>
             <input
               type="password"
               placeholder="Enter new password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"
+              className="w-full mt-1 px-4 py-2 border rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"
             />
+
+            <label className="text-lg font-medium text-gray-700">
+              Confirm Password
+            </label>
             <input
               type="password"
               placeholder="Re-enter new password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full mt-1 px-4 py-2 border rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
@@ -217,6 +236,7 @@ export default function Settings() {
               Save All Changes
             </button>
           </div>
+
         </div>
       </main>
     </>
