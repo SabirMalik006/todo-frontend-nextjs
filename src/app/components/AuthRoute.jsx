@@ -51,12 +51,12 @@ const AuthRoute = ({ children, reverse = false }) => {
     const refresh = localStorage.getItem("refreshToken");
 
     if (reverse) {
-      // if already logged in, redirect away from login/register
+      
       if (token || refresh) {
         router.replace("/");
       }
     } else {
-      // if not logged in, redirect to login
+      
       if (!token) {
         router.replace("/login");
       }
@@ -65,7 +65,7 @@ const AuthRoute = ({ children, reverse = false }) => {
     setLoading(false);
   }, [router, reverse]);
 
-  // 🔄 Refresh access token every 3 minutes
+  
   useEffect(() => {
     const refreshInterval = setInterval(async () => {
       const refreshToken = localStorage.getItem("refreshToken");
@@ -82,12 +82,12 @@ const AuthRoute = ({ children, reverse = false }) => {
         }
       } catch (err) {
         console.error("Token refresh failed:", err);
-        // optional: if refresh fails, log out
+        
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         router.replace("/login");
       }
-    }, 15 * 60 * 1000); // 3 minutes
+    }, 15 * 60 * 1000); 
 
     return () => clearInterval(refreshInterval);
   }, [router]);
