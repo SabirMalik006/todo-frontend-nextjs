@@ -16,6 +16,7 @@ export default function Settings() {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false); // 🔥 new loading state
 
   const fetchUser = async () => {
     try {
@@ -41,6 +42,7 @@ export default function Settings() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setLoading(true); // start loading
 
     const token = localStorage.getItem("accessToken");
     let uploadedImageUrl = null;
@@ -102,6 +104,8 @@ export default function Settings() {
         msg = "❌ Passwords do not match";
       }
       toast.error(msg);
+    } finally {
+      setLoading(false); // stop loading
     }
   };
 
@@ -119,7 +123,7 @@ export default function Settings() {
       </div>
 
       <main className="flex flex-col items-center justify-center min-h-[68vh] px-8">
-        <div className="w-full max-w-lg bg-[#f7f2f2] rounded-2xl shadow-xl px-10 py-8 mb-4">
+        <div className="w-full max-w-lg bg-[#f7f2f2] rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] px-10 py-8 mb-4">
           {/* Profile Image Section */}
           <div className="flex flex-col items-center">
             <label className="mt-3 block text-gray-800 font-semibold text-3xl mb-2">
@@ -136,12 +140,12 @@ export default function Settings() {
                 setImageFile(file);
                 setImagePreview(URL.createObjectURL(file));
               }}
-              className="hidden" // hide the raw input
+              className="hidden"
             />
 
-            {/* Preview area as clickable label */}
+            {/* Preview area */}
             <label
-              htmlFor="fileInput" // this makes preview clickable
+              htmlFor="fileInput"
               className="cursor-pointer mt-2 inline-block"
             >
               {imagePreview ? (
@@ -152,7 +156,7 @@ export default function Settings() {
                 />
               ) : (
                 <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center text-center hover:opacity-80 transition duration-200 mb-4">
-                  <span >
+                  <span>
                     <CiCamera className="h-7 w-7" />
                   </span>
                 </div>
@@ -226,17 +230,19 @@ export default function Settings() {
             />
           </div>
 
-          {/* Single Save Button */}
+          {/* Save Button */}
           <div className="mt-8">
             <button
               type="button"
               onClick={handleSave}
-              className="w-full bg-[#2B1887] text-white py-2 rounded-lg cursor-pointer font-semibold hover:opacity-80 duration-300 transition"
+              disabled={loading}
+              className={`w-full bg-[#2B1887] text-white py-2 rounded-lg cursor-pointer font-semibold transition duration-300 ${
+                loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-80"
+              }`}
             >
-              Save All Changes
+              {loading ? "Saving..." : "Save All Changes"}
             </button>
           </div>
-
         </div>
       </main>
     </>
