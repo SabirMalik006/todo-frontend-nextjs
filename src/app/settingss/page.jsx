@@ -22,7 +22,7 @@ export default function Settings() {
       const token = localStorage.getItem("accessToken");
       if (!token) return;
 
-      const res = await api.get("/auth/me", {
+      const res = await api.get("https://todo-backend-w-nextjs-production.up.railway.app/api/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -119,10 +119,10 @@ export default function Settings() {
       </div>
 
       <main className="flex flex-col items-center justify-center min-h-[68vh] px-8">
-        <div className="w-full max-w-lg bg-[#f7f2f2] rounded-2xl shadow-xl px-10 py-12 mb-4">
+        <div className="w-full max-w-lg bg-[#f7f2f2] rounded-2xl shadow-xl px-10 py-8 mb-4">
           {/* Profile Image Section */}
           <div className="flex flex-col items-center">
-            <label className="mt-3 block text-gray-700 font-medium">
+            <label className="mt-3 block text-gray-800 font-semibold text-3xl mb-2">
               Change Profile Image
             </label>
 

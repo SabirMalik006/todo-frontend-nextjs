@@ -18,7 +18,7 @@ export default function Navbar() {
       if (!token) return;
 
       const res = await api.get(
-        "/auth/me",
+        "https://todo-backend-w-nextjs-production.up.railway.app/api/auth/me",
         {
           headers: {
             Authorization: `Bearer ${token}`,

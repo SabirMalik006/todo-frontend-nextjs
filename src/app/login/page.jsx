@@ -17,7 +17,7 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       const res = await api.post(
-        "/auth/login",
+        "https://todo-backend-w-nextjs-production.up.railway.app/api/auth/login",
         {
           email,
           password,

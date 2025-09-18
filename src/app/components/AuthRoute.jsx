@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import api from "../utils/api";
 
 const AuthRoute = ({ children, reverse = false }) => {
   const router = useRouter();
@@ -13,47 +12,19 @@ const AuthRoute = ({ children, reverse = false }) => {
     const refresh = localStorage.getItem("refreshToken");
 
     if (reverse) {
+      
       if (token || refresh) {
         router.replace("/");
       }
     } else {
-      if (!token) {
+      
+      if (!token && !refresh) {
         router.replace("/login");
-      } else {
-
-        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       }
     }
 
     setLoading(false);
   }, [router, reverse]);
-
-  useEffect(() => {
-    const refreshInterval = setInterval(async () => {
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (!refreshToken) return;
-
-      try {
-        const res = await api.post("auth/refresh", { refreshToken });
-
-        if (res.data?.accessToken) {
-       
-          localStorage.setItem("accessToken", res.data.accessToken);
-
-        
-          api.defaults.headers.common["Authorization"] = `Bearer ${res.data.accessToken}`;
-        }
-      } catch (err) {
-        console.error("Token refresh failed:", err);
-
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        router.replace("/login");
-      }
-    }, 60000);
-
-    return () => clearInterval(refreshInterval);
-  }, [router]);
 
   if (loading) return null;
 
