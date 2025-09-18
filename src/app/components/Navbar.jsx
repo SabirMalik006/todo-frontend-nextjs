@@ -43,7 +43,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="flex justify-between items-center py-3 sm:py-4 bg-[#e0dee6] border-b border-gray-500 px-4 sm:px-8 relative">
+    <nav className="flex justify-between items-center py-3 sm:py-4 bg-white border-b border-gray-500 px-4 sm:px-8 relative">
       {/* Left Logo */}
       <h1 className="font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-900 cursor-pointer">
         <Link href="/">Todo App</Link>

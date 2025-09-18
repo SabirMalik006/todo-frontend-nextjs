@@ -558,7 +558,7 @@ export default function TodoPage() {
     <>
       <AuthRoute />
       <Navbar />
-      <div className="h-full w-full bg-[#e0dee6] todo pt-15 ">
+      <div className="h-full w-full bg-white todo pt-15 ">
         <div className="flex justify-end px-10 mb-4">
           <button
             onClick={() => setIsColumnModalOpen(true)} // open the modal instead of direct API call
@@ -576,7 +576,7 @@ export default function TodoPage() {
           <div
             ref={boardRef}
             onMouseDown={handleMouseDown}
-            className="flex gap-6 bg-[#e0dee6] px-6 lg:px-10 py-4 items-start overflow-x-auto h-[calc(100vh-50px)] select-none"
+            className="flex gap-6 bg-white px-6 lg:px-10 py-4 items-start overflow-x-auto h-[calc(100vh-50px)] select-none"
           >
             {columns.map((col) => (
               <Droppable key={col._id} droppableId={String(col._id)}>
@@ -584,7 +584,7 @@ export default function TodoPage() {
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[408px] min-h-[200px] max-h-[calc(100vh-160px)] overflow-y-auto"
+                    className="bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[408px] max-w-[820px] w-full min-h-[200px] max-h-[calc(100vh-160px)] overflow-y-auto"
                   >
                     {/* Column Header */}
                     <div className="flex justify-between mb-3 relative">
