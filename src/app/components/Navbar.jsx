@@ -76,8 +76,8 @@ export default function Navbar() {
 
         {/* Dropdown Menu */}
         {menuOpen && (
-          <div className="absolute right-2 sm:right-7 top-10 sm:top-12 mt-2 w-56 sm:w-72 bg-white/95 rounded-lg shadow-xl p-4 sm:p-5 z-50">
-            <div className="mb-3 sm:mb-4 border-b border-gray-300 pb-3 sm:pb-4 text-left flex flex-col items-start gap-1">
+          <div className="absolute right-2 sm:right-7 top-10 sm:top-12 mt-2 w-56 sm:w-72 bg-white/95 rounded-lg shadow-2xl p-4 sm:p-5 z-50">
+            <div className="mb-3 sm:mb-4 border-b border-gray-300 pb-3 sm:pb-4 text-left flex flex-col items-start gap-1 ">
               <h2 className="text-base sm:text-lg font-medium text-gray-900 tracking-wide">
                 {user?.name || "Guest User"}
               </h2>

@@ -736,7 +736,7 @@ export default function TodoPage() {
                                     pointerEvents: "auto"
                                   }}
                                   className={`todo-item relative bg-[#e9e8ee] p-5 rounded-lg shadow break-words ${
-                                    snapshot.isDragging ? "shadow-md border border-[#2B1887]" : ""
+                                    snapshot.isDragging 
                                   }`}
                                 >
                                   {/* Todo Number */}
