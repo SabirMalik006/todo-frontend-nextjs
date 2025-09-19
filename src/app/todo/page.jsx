@@ -39,9 +39,8 @@ export default function TodoPage() {
   const startX = useRef(0);
   const scrollLeft = useRef(0);
   
-  // Ref for auto-scrolling during drag
-  const autoScrollIntervalRef = useRef(null);
-  const scrollSpeedRef = useRef(0);
+  // Removed custom rAF auto-scroll; rely on library-native behavior
+  const cleanupScrolling = () => {};
   
   // Handle manual board scrolling (when not dragging items)
   const handleBoardMouseDown = (e) => {
@@ -61,15 +60,6 @@ export default function TodoPage() {
     if (boardContainerRef.current) {
       boardContainerRef.current.style.cursor = 'grabbing';
     }
-  };
-  
-  // Clean up all scrolling animations and intervals
-  const cleanupScrolling = () => {
-    if (autoScrollIntervalRef.current) {
-      clearInterval(autoScrollIntervalRef.current);
-      autoScrollIntervalRef.current = null;
-    }
-    scrollSpeedRef.current = 0;
   };
   
   // Set up event listeners for manual board scrolling
@@ -99,59 +89,7 @@ export default function TodoPage() {
     };
   }, []);
   
-  // Auto-scrolling during drag operations
-  useEffect(() => {
-    if (!isDragging) {
-      cleanupScrolling();
-      return;
-    }
-    
-    const handleDragScroll = (e) => {
-      if (!boardRef.current) return;
-      
-      const boardRect = boardRef.current.getBoundingClientRect();
-      const edgeThreshold = 100; // pixels from edge to trigger scroll
-      const maxScrollSpeed = 25; // maximum scroll speed
-      
-      // Calculate distance from edges
-      const distanceFromLeft = Math.max(0, e.clientX - boardRect.left);
-      const distanceFromRight = Math.max(0, boardRect.right - e.clientX);
-      
-      // Determine scroll direction and speed based on edge proximity
-      let scrollDirection = 0;
-      
-      if (distanceFromLeft < edgeThreshold) {
-        // Near left edge - scroll left
-        scrollDirection = -1;
-        scrollSpeedRef.current = Math.max(5, maxScrollSpeed * (1 - distanceFromLeft / edgeThreshold));
-      } else if (distanceFromRight < edgeThreshold) {
-        // Near right edge - scroll right
-        scrollDirection = 1;
-        scrollSpeedRef.current = Math.max(5, maxScrollSpeed * (1 - distanceFromRight / edgeThreshold));
-      } else {
-        // Not near edge - stop scrolling
-        scrollSpeedRef.current = 0;
-        cleanupScrolling();
-        return;
-      }
-      
-      // Start auto-scroll if not already running
-      if (!autoScrollIntervalRef.current) {
-        autoScrollIntervalRef.current = setInterval(() => {
-          if (scrollSpeedRef.current > 0 && boardRef.current) {
-            boardRef.current.scrollLeft += scrollDirection * scrollSpeedRef.current;
-          }
-        }, 16); // ~60fps
-      }
-    };
-    
-    window.addEventListener('mousemove', handleDragScroll);
-    
-    return () => {
-      window.removeEventListener('mousemove', handleDragScroll);
-      cleanupScrolling();
-    };
-  }, [isDragging]);
+  // Removed custom auto-scrolling during drag operations
 
   const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
@@ -451,49 +389,9 @@ export default function TodoPage() {
     }
   };
 
-  const onDragUpdate = useCallback((update) => {
-    // Improved column detection - only allow drop on column under mouse
-    if (boardRef.current && update) {
-      // Reset all columns to normal state first
-      const columnElements = boardRef.current.querySelectorAll('.column');
-      columnElements.forEach(el => {
-        el.style.boxShadow = '';
-        el.style.opacity = '1'; // Original opacity restored
-        el.style.border = '1px solid #D5CCFF';
-      });
-      
-      // Get mouse position for better detection
-      const mouseX = update.clientX || 0;
-      const mouseY = update.clientY || 0;
-      
-      // Find ONLY the column directly under mouse cursor
-      let columnUnderMouse = null;
-      
-      columnElements.forEach(column => {
-        const rect = column.getBoundingClientRect();
-        
-        // Check if mouse is directly over this column
-        if (mouseX >= rect.left && mouseX <= rect.right && 
-            mouseY >= rect.top && mouseY <= rect.bottom) {
-          columnUnderMouse = column;
-        }
-      });
-      
-      // ONLY highlight column directly under mouse
-      if (columnUnderMouse) {
-        // Make target column visible with border only
-        columnUnderMouse.style.border = '2px solid #6E41E2';
-        
-        // Force destination to be this column
-        if (update.destination) {
-          const columnId = columnUnderMouse.getAttribute('data-column-id');
-          if (columnId && update.destination.droppableId !== columnId) {
-            // This will force react-beautiful-dnd to only consider this column
-            update.destination.droppableId = columnId;
-          }
-        }
-      }
-    }
+  const onDragUpdate = useCallback(() => {
+    // Visual feedback is now handled by Droppable snapshot.isDraggingOver.
+    // Avoid mutating update.destination to keep library behavior stable.
   }, []);
 
   const onDragEnd = async (result) => {
@@ -547,7 +445,7 @@ export default function TodoPage() {
     }
 
     toast.success(`${moved.title} moved to ${destCol.name}`, {
-      autoClose: 2000,
+      duration: 2000,
     });
 
     if (moved.isDummy) {
@@ -671,18 +569,24 @@ export default function TodoPage() {
             onMouseDown={handleBoardMouseDown}
             className="w-full h-[calc(100vh-50px)] select-none cursor-grab active:cursor-grabbing"
           >
-            <div
-              ref={boardRef}
-              className="flex gap-6 bg-white px-6 lg:px-10 py-4 items-start overflow-x-auto h-full"
-            >
-              {columns.map((col) => (
-                <Droppable key={col._id} droppableId={String(col._id)}>
-                  {(provided) => (
+            <Droppable droppableId="board-scroll" direction="horizontal" isDropDisabled={true} type="TASK">
+              {(boardProvided) => (
+                <div
+                  ref={(node) => {
+                    boardRef.current = node;
+                    boardProvided.innerRef(node);
+                  }}
+                  {...boardProvided.droppableProps}
+                  className="flex gap-6 bg-white px-6 lg:px-10 py-4 items-start overflow-x-auto h-full"
+                >
+                  {columns.map((col) => (
+                <Droppable key={col._id} droppableId={String(col._id)} type="TASK" ignoreContainerClipping={true}>
+                  {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                       data-column-id={String(col._id)}
-                      className="column bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[220px] max-w-[820px] w-full min-h-[200px] max-h-[calc(100vh-160px)] overflow-y-auto"
+                      className={`column bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[220px] max-w-[820px] w-full min-h-[200px] max-h-[calc(100vh-160px)] overflow-y-auto ${snapshot.isDraggingOver ? 'ring-2 ring-[#6E41E2] ring-offset-2' : ''}`}
                     >
                       {/* Column Header */}
                       <div className="flex justify-between mb-3 relative">
@@ -780,7 +684,6 @@ export default function TodoPage() {
                                     zIndex: snapshot.isDragging ? 9999 : "auto",
                                     opacity: snapshot.isDragging ? 0.9 : 1,
                                     boxShadow: snapshot.isDragging ? "0 5px 10px rgba(0,0,0,0.2)" : "none",
-                                    transform: snapshot.isDragging ? `${provided.draggableProps.style.transform}` : "none",
                                     pointerEvents: "auto"
                                   }}
                                   className={`todo-item relative bg-[#e9e8ee] p-5 rounded-lg shadow break-words cursor-pointer ${
@@ -851,7 +754,10 @@ export default function TodoPage() {
                   )}
                 </Droppable>
               ))}
-            </div>
+                  {boardProvided.placeholder}
+                </div>
+              )}
+            </Droppable>
           </div>
         </DragDropContext>
       </div>
