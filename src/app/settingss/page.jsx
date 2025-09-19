@@ -111,7 +111,7 @@ export default function Settings() {
 
   return (
     <>
-      <Navbar />
+      <Navbar className="fixed top-0 left-0 w-full z-100" />
 
       <div className="w-full max-w-lg flex px-8 my-4">
         <Link
@@ -123,7 +123,7 @@ export default function Settings() {
       </div>
 
       <main className="flex flex-col items-center justify-center min-h-[68vh] px-8">
-        <div className="w-full max-w-lg bg-[#e9e9e9e3] rounded-2xl shadow-2xl px-10 py-8 mb-4">
+        <div className="w-full max-w-lg bg-[#e9e9e9e3] rounded-2xl shadow-2xl px-10 py-6 ">
           {/* Profile Image Section */}
           <div className="flex flex-col items-center">
             <label className="mt-3 block text-gray-800 font-semibold text-3xl mb-2">

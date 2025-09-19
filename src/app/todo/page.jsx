@@ -586,7 +586,7 @@ export default function TodoPage() {
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                       data-column-id={String(col._id)}
-                      className={`column bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[220px] max-w-[820px] w-full min-h-[200px] max-h-[calc(100vh-160px)] overflow-y-auto ${snapshot.isDraggingOver ? 'ring-2 ring-[#6E41E2] ring-offset-2' : ''}`}
+                      className={`column bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[220px] max-w-[820px] w-full min-h-[150px] max-h-[calc(100vh-160px)] overflow-y-auto ${snapshot.isDraggingOver ? 'ring-2 ring-[#6E41E2] ring-offset-2' : ''}`}
                     >
                       {/* Column Header */}
                       <div className="flex justify-between mb-3 relative">
@@ -744,7 +744,7 @@ export default function TodoPage() {
                             </Draggable>
                           ))
                         ) : (
-                          <p className="text-gray-500 text-center mt-5  text-xl">
+                          <p className="text-gray-500 text-center   text-xl">
                             No todos Here
                           </p>
                         )}
