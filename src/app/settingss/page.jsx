@@ -42,7 +42,7 @@ export default function Settings() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    setLoading(true); // start loading
+    setLoading(true); 
 
     const token = localStorage.getItem("accessToken");
     let uploadedImageUrl = null;
@@ -105,7 +105,7 @@ export default function Settings() {
       }
       toast.error(msg);
     } finally {
-      setLoading(false); // stop loading
+      setLoading(false); 
     }
   };
 
@@ -123,7 +123,7 @@ export default function Settings() {
       </div>
 
       <main className="flex flex-col items-center justify-center min-h-[68vh] px-8">
-        <div className="w-full max-w-lg bg-[#f7f2f2] rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] px-10 py-8 mb-4">
+        <div className="w-full max-w-lg bg-[#e9e9e9e3] rounded-2xl shadow-2xl px-10 py-8 mb-4">
           {/* Profile Image Section */}
           <div className="flex flex-col items-center">
             <label className="mt-3 block text-gray-800 font-semibold text-3xl mb-2">
