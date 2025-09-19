@@ -12,7 +12,7 @@ import { LiaEdit } from "react-icons/lia";
 export default function TodoPage() {
   const [columns, setColumns] = useState([]);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(""); 
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState(null);
@@ -40,7 +40,8 @@ export default function TodoPage() {
   const scrollLeft = useRef(0);
   
   // Ref for auto-scrolling during drag
-  const autoScrollAnimationRef = useRef(null);
+  const autoScrollIntervalRef = useRef(null);
+  const scrollSpeedRef = useRef(0);
   
   // Handle manual board scrolling (when not dragging items)
   const handleBoardMouseDown = (e) => {
@@ -64,10 +65,11 @@ export default function TodoPage() {
   
   // Clean up all scrolling animations and intervals
   const cleanupScrolling = () => {
-    if (autoScrollAnimationRef.current) {
-      cancelAnimationFrame(autoScrollAnimationRef.current);
-      autoScrollAnimationRef.current = null;
+    if (autoScrollIntervalRef.current) {
+      clearInterval(autoScrollIntervalRef.current);
+      autoScrollIntervalRef.current = null;
     }
+    scrollSpeedRef.current = 0;
   };
   
   // Set up event listeners for manual board scrolling
@@ -97,73 +99,49 @@ export default function TodoPage() {
     };
   }, []);
   
-  // Auto-scrolling only at screen edges, not column edges
+  // Auto-scrolling during drag operations
   useEffect(() => {
     if (!isDragging) {
       cleanupScrolling();
       return;
     }
     
-    // Track if we're currently auto-scrolling
-    let isAutoScrolling = false;
-    
     const handleDragScroll = (e) => {
       if (!boardRef.current) return;
       
-      // Only check window edges, not board or column edges
-      const windowWidth = window.innerWidth;
-      const edgeSize = 50; // Large edge size for better detection at window edges
+      const boardRect = boardRef.current.getBoundingClientRect();
+      const edgeThreshold = 100; // pixels from edge to trigger scroll
+      const maxScrollSpeed = 25; // maximum scroll speed
       
-      // Check if we should auto-scroll based on window edges
-      const shouldScrollLeft = e.clientX < edgeSize;
-      const shouldScrollRight = e.clientX > windowWidth - edgeSize;
+      // Calculate distance from edges
+      const distanceFromLeft = Math.max(0, e.clientX - boardRect.left);
+      const distanceFromRight = Math.max(0, boardRect.right - e.clientX);
       
-      // If we're not near a window edge, stop any existing auto-scroll
-      if (!shouldScrollLeft && !shouldScrollRight) {
-        if (autoScrollAnimationRef.current) {
-          cancelAnimationFrame(autoScrollAnimationRef.current);
-          autoScrollAnimationRef.current = null;
-          isAutoScrolling = false;
-        }
+      // Determine scroll direction and speed based on edge proximity
+      let scrollDirection = 0;
+      
+      if (distanceFromLeft < edgeThreshold) {
+        // Near left edge - scroll left
+        scrollDirection = -1;
+        scrollSpeedRef.current = Math.max(5, maxScrollSpeed * (1 - distanceFromLeft / edgeThreshold));
+      } else if (distanceFromRight < edgeThreshold) {
+        // Near right edge - scroll right
+        scrollDirection = 1;
+        scrollSpeedRef.current = Math.max(5, maxScrollSpeed * (1 - distanceFromRight / edgeThreshold));
+      } else {
+        // Not near edge - stop scrolling
+        scrollSpeedRef.current = 0;
+        cleanupScrolling();
         return;
       }
       
-      // Don't start a new animation if we're already scrolling
-      if (isAutoScrolling) return;
-      
-      // Function to perform the actual scrolling with requestAnimationFrame
-      const performScroll = () => {
-        if (!isDragging || !boardRef.current) {
-          isAutoScrolling = false;
-          return;
-        }
-        
-        const board = boardRef.current;
-        // Larger scroll amount for faster scrolling at window edges
-        const scrollAmount = 10;
-        
-        if (shouldScrollLeft) {
-          board.scrollLeft = Math.max(0, board.scrollLeft - scrollAmount);
-          isAutoScrolling = true;
-        } else if (shouldScrollRight) {
-          board.scrollLeft += scrollAmount;
-          isAutoScrolling = true;
-        } else {
-          isAutoScrolling = false;
-          return;
-        }
-        
-        // Continue animation only if still dragging
-        if (isDragging) {
-          autoScrollAnimationRef.current = requestAnimationFrame(performScroll);
-        } else {
-          isAutoScrolling = false;
-        }
-      };
-      
-      // Start the animation
-      if (!autoScrollAnimationRef.current) {
-        autoScrollAnimationRef.current = requestAnimationFrame(performScroll);
+      // Start auto-scroll if not already running
+      if (!autoScrollIntervalRef.current) {
+        autoScrollIntervalRef.current = setInterval(() => {
+          if (scrollSpeedRef.current > 0 && boardRef.current) {
+            boardRef.current.scrollLeft += scrollDirection * scrollSpeedRef.current;
+          }
+        }, 16); // ~60fps
       }
     };
     
@@ -474,19 +452,55 @@ export default function TodoPage() {
   };
 
   const onDragUpdate = useCallback((update) => {
-    // Auto-scrolling is now handled by the useEffect with requestAnimationFrame
-    // This function is kept for compatibility with react-beautiful-dnd
-    // but we don't need to implement manual scrolling here anymore
+    // Improved column detection - only allow drop on column under mouse
+    if (boardRef.current && update) {
+      // Reset all columns to normal state first
+      const columnElements = boardRef.current.querySelectorAll('.column');
+      columnElements.forEach(el => {
+        el.style.boxShadow = '';
+        el.style.opacity = '1'; // Original opacity restored
+        el.style.border = '1px solid #D5CCFF';
+      });
+      
+      // Get mouse position for better detection
+      const mouseX = update.clientX || 0;
+      const mouseY = update.clientY || 0;
+      
+      // Find ONLY the column directly under mouse cursor
+      let columnUnderMouse = null;
+      
+      columnElements.forEach(column => {
+        const rect = column.getBoundingClientRect();
+        
+        // Check if mouse is directly over this column
+        if (mouseX >= rect.left && mouseX <= rect.right && 
+            mouseY >= rect.top && mouseY <= rect.bottom) {
+          columnUnderMouse = column;
+        }
+      });
+      
+      // ONLY highlight column directly under mouse
+      if (columnUnderMouse) {
+        // Make target column visible with border only
+        columnUnderMouse.style.border = '2px solid #6E41E2';
+        
+        // Force destination to be this column
+        if (update.destination) {
+          const columnId = columnUnderMouse.getAttribute('data-column-id');
+          if (columnId && update.destination.droppableId !== columnId) {
+            // This will force react-beautiful-dnd to only consider this column
+            update.destination.droppableId = columnId;
+          }
+        }
+      }
+    }
   }, []);
 
   const onDragEnd = async (result) => {
     setIsDragging(false);
     
     // Clean up any auto-scrolling animations
-    if (autoScrollAnimationRef.current) {
-      cancelAnimationFrame(autoScrollAnimationRef.current);
-      autoScrollAnimationRef.current = null;
-    }
+    cleanupScrolling();
     
     // Reset board background color
     if (boardRef.current) {
@@ -519,6 +533,18 @@ export default function TodoPage() {
     destCol.todos.forEach((t, i) => (t.order = i + 1));
 
     setColumns(newColumns);
+    
+    // Scroll to the destination column to ensure it's visible
+    if (boardRef.current) {
+      const columnElements = boardRef.current.querySelectorAll('.column');
+      const destColumnElement = Array.from(columnElements).find(
+        el => el.getAttribute('data-column-id') === dstColId
+      );
+      
+      if (destColumnElement) {
+        destColumnElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
 
     toast.success(`${moved.title} moved to ${destCol.name}`, {
       autoClose: 2000,
@@ -627,6 +653,14 @@ export default function TodoPage() {
             // Add a subtle transition effect to the board
             if (boardRef.current) {
               boardRef.current.style.backgroundColor = "#f9f9ff";
+              
+              // Reset all columns to normal state
+              const columnElements = boardRef.current.querySelectorAll('.column');
+              columnElements.forEach(el => {
+                el.style.boxShadow = '';
+                el.style.opacity = '1';
+                el.style.border = '1px solid #D5CCFF';
+              });
             }
           }}
           onDragUpdate={onDragUpdate}
@@ -647,7 +681,8 @@ export default function TodoPage() {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className="column bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[408px] max-w-[820px] w-full min-h-[200px] max-h-[calc(100vh-160px)] overflow-y-auto"
+                      data-column-id={String(col._id)}
+                      className="column bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[220px] max-w-[820px] w-full min-h-[200px] max-h-[calc(100vh-160px)] overflow-y-auto"
                     >
                       {/* Column Header */}
                       <div className="flex justify-between mb-3 relative">
@@ -727,6 +762,19 @@ export default function TodoPage() {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
+                                  onClick={(e) => {
+                                    // Prevent opening modal when clicking on specific interactive elements
+                                    if (e.target.closest('.delete-btn, .edit-btn')) {
+                                      return;
+                                    }
+                                    
+                                    // Prevent opening modal right after drag and drop
+                                    if (isDragging) {
+                                      return;
+                                    }
+                                    
+                                    openViewModal(todo);
+                                  }}
                                   style={{
                                     ...provided.draggableProps.style,
                                     zIndex: snapshot.isDragging ? 9999 : "auto",
@@ -735,7 +783,7 @@ export default function TodoPage() {
                                     transform: snapshot.isDragging ? `${provided.draggableProps.style.transform}` : "none",
                                     pointerEvents: "auto"
                                   }}
-                                  className={`todo-item relative bg-[#e9e8ee] p-5 rounded-lg shadow break-words ${
+                                  className={`todo-item relative bg-[#e9e8ee] p-5 rounded-lg shadow break-words cursor-pointer ${
                                     snapshot.isDragging 
                                   }`}
                                 >
@@ -746,8 +794,7 @@ export default function TodoPage() {
 
                                   {/* Todo Title & Delete */}
                                   <div
-                                    onClick={() => openViewModal(todo)}
-                                    className="mb-3 cursor-pointer"
+                                    className="mb-3"
                                   >
                                     <div className="relative pr-6">
                                       <p className="text-base sm:text-lg font-semibold text-black break-words line-clamp-2">
@@ -758,12 +805,13 @@ export default function TodoPage() {
                                           e.stopPropagation();
                                           deleteTodo(todo._id, todo.isDummy);
                                         }}
-                                        className="absolute top-0 right-0 text-red-500 cursor-pointer hover:scale-110 duration-300 w-5 h-5"
+                                        className="absolute top-0 right-0 text-red-500 cursor-pointer hover:scale-110 duration-300 w-5 h-5 delete-btn"
                                       />
                                     </div>
                                     <p className="text-gray-600 text-xs sm:text-sm break-words line-clamp-2">
                                       {todo.description}
                                     </p>
+
                                   </div>
 
                                   {/* Todo Footer */}
@@ -793,7 +841,7 @@ export default function TodoPage() {
                             </Draggable>
                           ))
                         ) : (
-                          <p className="text-gray-500 text-center mt-5  text-3xl">
+                          <p className="text-gray-500 text-center mt-5  text-xl">
                             No todos Here
                           </p>
                         )}
@@ -911,8 +959,8 @@ export default function TodoPage() {
               Todo Details
             </h2>
 
-            <div className="space-y-5 text-gray-700 text-base">
-              <div className="rounded-lg p-3 bg-[#eae6f7]">
+            <div className="space-y-5 text-gray-700 text-base ">
+              <div className="rounded-lg p-3 bg-[#d6ceff]">
                 <span className="font-semibold text-[#2B1887] text-lg block mb-1 ">
                   Title :
                 </span>
@@ -921,7 +969,7 @@ export default function TodoPage() {
                 </p>
               </div>
 
-              <div className="rounded-lg p-3 flex items-center bg-[#eae6f7]">
+              <div className="rounded-lg p-3 flex items-center bg-[#d6ceff]">
                 <span className="font-semibold text-[#2B1887] text-lg block mb-1">
                   Priority : &nbsp;
                 </span>
@@ -938,7 +986,7 @@ export default function TodoPage() {
                 </p>
               </div>
 
-              <div className="rounded-lg p-3 max-h-[400px] overflow-y-auto bg-[#eae6f7]">
+              <div className="rounded-lg p-3 max-h-[400px] overflow-y-auto bg-[#d6ceff]">
                 <span className="font-semibold text-[#2B1887] text-lg block mb-1">
                   Description : &nbsp;
                 </span>
