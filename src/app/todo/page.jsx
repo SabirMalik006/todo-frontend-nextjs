@@ -452,43 +452,40 @@ export default function TodoPage() {
   };
 
   const onDragUpdate = useCallback((update) => {
-    // Improved column detection - only allow drop on column under mouse
+
     if (boardRef.current && update) {
-      // Reset all columns to normal state first
+
       const columnElements = boardRef.current.querySelectorAll('.column');
       columnElements.forEach(el => {
         el.style.boxShadow = '';
-        el.style.opacity = '1'; // Original opacity restored
+        el.style.opacity = '1';
         el.style.border = '1px solid #D5CCFF';
       });
-      
-      // Get mouse position for better detection
+
       const mouseX = update.clientX || 0;
       const mouseY = update.clientY || 0;
       
-      // Find ONLY the column directly under mouse cursor
+
       let columnUnderMouse = null;
       
       columnElements.forEach(column => {
         const rect = column.getBoundingClientRect();
         
-        // Check if mouse is directly over this column
+
         if (mouseX >= rect.left && mouseX <= rect.right && 
             mouseY >= rect.top && mouseY <= rect.bottom) {
           columnUnderMouse = column;
         }
       });
       
-      // ONLY highlight column directly under mouse
+
       if (columnUnderMouse) {
-        // Make target column visible with border only
+
         columnUnderMouse.style.border = '2px solid #6E41E2';
         
-        // Force destination to be this column
         if (update.destination) {
           const columnId = columnUnderMouse.getAttribute('data-column-id');
           if (columnId && update.destination.droppableId !== columnId) {
-            // This will force react-beautiful-dnd to only consider this column
             update.destination.droppableId = columnId;
           }
         }
@@ -499,10 +496,8 @@ export default function TodoPage() {
   const onDragEnd = async (result) => {
     setIsDragging(false);
     
-    // Clean up any auto-scrolling animations
     cleanupScrolling();
     
-    // Reset board background color
     if (boardRef.current) {
       boardRef.current.style.backgroundColor = "";
     }
@@ -534,7 +529,6 @@ export default function TodoPage() {
 
     setColumns(newColumns);
     
-    // Scroll to the destination column to ensure it's visible
     if (boardRef.current) {
       const columnElements = boardRef.current.querySelectorAll('.column');
       const destColumnElement = Array.from(columnElements).find(
@@ -650,11 +644,9 @@ export default function TodoPage() {
         <DragDropContext
           onDragStart={(start) => {
             setIsDragging(true);
-            // Add a subtle transition effect to the board
             if (boardRef.current) {
               boardRef.current.style.backgroundColor = "#f9f9ff";
               
-              // Reset all columns to normal state
               const columnElements = boardRef.current.querySelectorAll('.column');
               columnElements.forEach(el => {
                 el.style.boxShadow = '';
@@ -682,7 +674,7 @@ export default function TodoPage() {
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                       data-column-id={String(col._id)}
-                      className="column bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[220px] max-w-[820px] w-full min-h-[200px] max-h-[calc(100vh-160px)] overflow-y-auto"
+                      className="column bg-[#D5CCFF] py-5 px-3 rounded-2xl flex flex-col min-w-[220px] max-w-[820px] w-full min-h-[120px] max-h-[calc(100vh-160px)] overflow-y-auto"
                     >
                       {/* Column Header */}
                       <div className="flex justify-between mb-3 relative">
@@ -763,12 +755,10 @@ export default function TodoPage() {
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
                                   onClick={(e) => {
-                                    // Prevent opening modal when clicking on specific interactive elements
                                     if (e.target.closest('.delete-btn, .edit-btn')) {
                                       return;
                                     }
                                     
-                                    // Prevent opening modal right after drag and drop
                                     if (isDragging) {
                                       return;
                                     }
@@ -841,7 +831,7 @@ export default function TodoPage() {
                             </Draggable>
                           ))
                         ) : (
-                          <p className="text-gray-500 text-center mt-5  text-xl">
+                          <p className="text-gray-500 text-center pb-3  text-xl">
                             No todos Here
                           </p>
                         )}
