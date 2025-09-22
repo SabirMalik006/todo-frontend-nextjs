@@ -12,7 +12,7 @@ import { LiaEdit } from "react-icons/lia";
 export default function TodoPage() {
   const [columns, setColumns] = useState([]);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState(""); 
+  const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState(null);
@@ -33,62 +33,62 @@ export default function TodoPage() {
   // Board reference for scrolling and drag operations
   const boardRef = useRef(null);
   const boardContainerRef = useRef(null);
-  
+
   // Refs for board scrolling
   const isManualScrolling = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
-  
+
   // Removed custom rAF auto-scroll; rely on library-native behavior
-  const cleanupScrolling = () => {};
-  
+  const cleanupScrolling = () => { };
+
   // Handle manual board scrolling (when not dragging items)
   const handleBoardMouseDown = (e) => {
     // Don't scroll if we're clicking on columns, todos, or interactive elements
     if (isDragging) return;
     if (!boardContainerRef.current) return;
-    
+
     // Check if the click is on a column, todo, or interactive element
     const interactiveElements = e.target.closest('.column, .todo-item, button, a, input, select, textarea');
     if (interactiveElements) return;
-    
+
     isManualScrolling.current = true;
     startX.current = e.pageX;
     scrollLeft.current = boardRef.current.scrollLeft;
-    
+
     // Change cursor to indicate grabbing
     if (boardContainerRef.current) {
       boardContainerRef.current.style.cursor = 'grabbing';
     }
   };
-  
+
   // Set up event listeners for manual board scrolling
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isManualScrolling.current || !boardRef.current) return;
-      
+
       const dx = e.pageX - startX.current;
       boardRef.current.scrollLeft = scrollLeft.current - dx;
       e.preventDefault();
     };
-    
+
     const handleMouseUp = () => {
       isManualScrolling.current = false;
       if (boardContainerRef.current) {
         boardContainerRef.current.style.cursor = '';
       }
     };
-    
+
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
-    
+
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
       cleanupScrolling();
     };
   }, []);
-  
+
   // Removed custom auto-scrolling during drag operations
 
   const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
@@ -399,29 +399,29 @@ export default function TodoPage() {
         el.style.opacity = '1'; // Original opacity restored
         el.style.border = '1px solid #D5CCFF';
       });
-      
+
       // Get mouse position for better detection
       const mouseX = update.clientX || 0;
       const mouseY = update.clientY || 0;
-      
+
       // Find ONLY the column directly under mouse cursor
       let columnUnderMouse = null;
-      
+
       columnElements.forEach(column => {
         const rect = column.getBoundingClientRect();
-        
+
         // Check if mouse is directly over this column
-        if (mouseX >= rect.left && mouseX <= rect.right && 
-            mouseY >= rect.top && mouseY <= rect.bottom) {
+        if (mouseX >= rect.left && mouseX <= rect.right &&
+          mouseY >= rect.top && mouseY <= rect.bottom) {
           columnUnderMouse = column;
         }
       });
-      
+
       // ONLY highlight column directly under mouse
       if (columnUnderMouse) {
         // Make target column visible with border only
         columnUnderMouse.style.border = '2px solid #6E41E2';
-        
+
         // Force destination to be this column
         if (update.destination) {
           const columnId = columnUnderMouse.getAttribute('data-column-id');
@@ -436,9 +436,9 @@ export default function TodoPage() {
 
   const onDragEnd = async (result) => {
     setIsDragging(false);
-    
+
     cleanupScrolling();
-    
+
     if (boardRef.current) {
       boardRef.current.style.backgroundColor = "";
     }
@@ -469,13 +469,13 @@ export default function TodoPage() {
     destCol.todos.forEach((t, i) => (t.order = i + 1));
 
     setColumns(newColumns);
-    
+
     if (boardRef.current) {
       const columnElements = boardRef.current.querySelectorAll('.column');
       const destColumnElement = Array.from(columnElements).find(
         el => el.getAttribute('data-column-id') === dstColId
       );
-      
+
       if (destColumnElement) {
         destColumnElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       }
@@ -572,7 +572,7 @@ export default function TodoPage() {
     <>
       <AuthRoute />
       <Navbar />
-      <div className="h-full w-full bg-white todo pt-15 ">
+      <div className="h-full w-full bg-gradient-to-r from-[#4e85dd] to-[#373B44] todo pt-15">
         <div className="flex justify-end px-10 mb-4">
           <button
             onClick={() => setIsColumnModalOpen(true)}
@@ -587,7 +587,7 @@ export default function TodoPage() {
             setIsDragging(true);
             if (boardRef.current) {
               boardRef.current.style.backgroundColor = "#f9f9ff";
-              
+
               const columnElements = boardRef.current.querySelectorAll('.column');
               columnElements.forEach(el => {
                 el.style.boxShadow = '';
@@ -612,181 +612,183 @@ export default function TodoPage() {
                     boardProvided.innerRef(node);
                   }}
                   {...boardProvided.droppableProps}
-                  className="flex gap-6 bg-white px-6 lg:px-10 py-4 items-start overflow-x-auto h-full"
+                  className="flex gap-6 bg-gradient-to-r from-[#4e85dd] to-[#373B44] px-6 lg:px-10 py-4 items-start overflow-x-auto h-full"
                 >
                   {columns.map((col) => (
-                <Droppable key={col._id} droppableId={String(col._id)} type="TASK" ignoreContainerClipping={true}>
-                  {(provided, snapshot) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      data-column-id={String(col._id)}
-                      className="column bg-[#D5CCFF] py-5 px-3 border rounded-2xl flex flex-col min-w-[220px] max-w-[820px] w-full min-h-[200px] max-h-[calc(100vh-160px)] overflow-y-auto"
-                    >
-                      {/* Column Header */}
-                      <div className="flex justify-between mb-3 relative">
-                        <h3
-                          className={`font-semibold text-[#2B1887] break-words ${
-                            columns.length > 6
-                              ? "text-sm sm:text-base"
-                              : columns.length > 4
-                              ? "text-lg sm:text-xl"
-                              : columns.length > 2
-                              ? "text-xl sm:text-2xl"
-                              : "text-2xl sm:text-3xl"
-                          }`}
+                    <Droppable key={col._id} droppableId={String(col._id)} type="TASK" ignoreContainerClipping={true}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          data-column-id={String(col._id)}
+                          className="column bg-[#D5CCFF] py-5 px-3 rounded-2xl flex flex-col min-w-[220px] max-w-[820px] w-full min-h-[135px] max-h-[calc(100vh-160px)] overflow-y-auto"
                         >
-                          {col.name}
-                        </h3>
-
-                        <div className="relative">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveMenu(
-                                activeMenu === col._id ? null : col._id
-                              );
-                            }}
-                            className="p-2 rounded-full hover:bg-[#c5b8ff] duration-300"
-                          >
-                            <TbDotsVertical className="w-5 h-5 text-[#2B1887] cursor-pointer" />
-                          </button>
-
-                          {activeMenu === col._id && (
-                            <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg z-20">
-                              <ul className="flex flex-col text-sm">
-                                <li
-                                  className="px-4 py-2 text-gray-800 hover:scale-103 transform duration-300 cursor-pointer"
-                                  onClick={() => {
-                                    setActiveMenu(null);
-                                    openAddTodoForColumn(col._id);
-                                  }}
-                                >
-                                  ➕ Add Todo
-                                </li>
-                                <li
-                                  className="px-4 py-2 text-gray-800 cursor-pointer hover:scale-103 transform duration-300"
-                                  onClick={() => {
-                                    setActiveMenu(null);
-                                    renameColumn(col._id);
-                                  }}
-                                >
-                                  ✏️ Rename
-                                </li>
-                                <li
-                                  className="px-4 py-2 text-gray-800 cursor-pointer hover:scale-103 transform duration-300"
-                                  onClick={() => {
-                                    setActiveMenu(null);
-                                    deleteColumn(col._id);
-                                  }}
-                                >
-                                  ❌ Delete Column
-                                </li>
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-3">
-                        {col.todos && col.todos.length > 0 ? (
-                          col.todos.map((todo, index) => (
-                            <Draggable
-                              key={String(todo._id)}
-                              draggableId={String(todo._id)}
-                              index={index}
+                          {/* Column Header */}
+                          <div className="flex justify-between mb-3 relative">
+                            <h3
+                              className={`font-semibold text-[#2B1887] break-words ${columns.length > 6
+                                ? "text-sm sm:text-base"
+                                : columns.length > 4
+                                  ? "text-lg sm:text-xl"
+                                  : columns.length > 2
+                                    ? "text-xl sm:text-2xl"
+                                    : "text-2xl sm:text-3xl"
+                                }`}
                             >
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  onClick={(e) => {
-                                    if (e.target.closest('.delete-btn, .edit-btn')) {
-                                      return;
-                                    }
-                                    
-                                    if (isDragging) {
-                                      return;
-                                    }
-                                    
-                                    openViewModal(todo);
-                                  }}
-                                  style={{
-                                    ...provided.draggableProps.style,
-                                    zIndex: snapshot.isDragging ? 9999 : "auto",
-                                    opacity: snapshot.isDragging ? 0.9 : 1,
-                                    boxShadow: snapshot.isDragging ? "0 5px 10px rgba(0,0,0,0.2)" : "none",
-                                    pointerEvents: "auto"
-                                  }}
-                                  className={`todo-item relative bg-[#e9e8ee] p-5 rounded-lg shadow break-words cursor-pointer ${
-                                    snapshot.isDragging 
-                                  }`}
-                                >
-                                  {/* Todo Number */}
-                                  <p className="absolute top-0 left-0 bg-black text-white text-xs sm:text-sm font-bold px-[6px] flex items-center justify-center shadow rounded-br-2xl">
-                                    {index + 1}
-                                  </p>
+                              {col.name}
+                            </h3>
 
-                                  {/* Todo Title & Delete */}
-                                  <div
-                                    className="mb-3"
-                                  >
-                                    <div className="relative pr-6">
-                                      <p className="text-base sm:text-lg font-semibold text-black break-words line-clamp-2">
-                                        {todo.title}
-                                      </p>
-                                      <MdDeleteOutline
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          deleteTodo(todo._id, todo.isDummy);
-                                        }}
-                                        className="absolute top-0 right-0 text-red-500 cursor-pointer hover:scale-110 duration-300 w-5 h-5 delete-btn"
-                                      />
-                                    </div>
-                                    <p className="text-gray-600 text-xs sm:text-sm break-words line-clamp-2">
-                                      {todo.description}
-                                    </p>
+                            <div className="relative">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveMenu(
+                                    activeMenu === col._id ? null : col._id
+                                  );
+                                }}
+                                className="p-2 rounded-full duration-300"
+                              >
+                                <TbDotsVertical
+                                  className="w-7 h-7 text-[#2B1887] cursor-pointer rounded-full p-1
+             hover:bg-purple-300 transition-colors duration-300"
+                                />
 
-                                  </div>
+                              </button>
 
-                                  {/* Todo Footer */}
-                                  <div className="flex items-center justify-between w-full">
-                                    <div className="flex items-center gap-3 w-full justify-between">
-                                      <div className="flex gap-1 items-center">
-                                        <p className="bg-[#ECB811] text-white text-xs sm:text-sm font-semibold px-5 py-2 rounded">
-                                          {todo.day || "Thu"}
-                                        </p>
-                                      </div>
+                              {activeMenu === col._id && (
+                                <div className="absolute right-0 top-0 w-40 bg-white rounded-lg shadow-lg z-20">
+                                  <ul className="flex flex-col text-sm rounded-lg overflow-hidden shadow-md border border-gray-200 bg-white">
+                                    <li
+                                      className="px-4 py-2 text-gray-700 hover:bg-green-100 hover:text-green-700 cursor-pointer transition-colors duration-200"
+                                      onClick={() => {
+                                        setActiveMenu(null);
+                                        openAddTodoForColumn(col._id);
+                                      }}
+                                    >
+                                      ➕ Add Todo
+                                    </li>
+                                    <li
+                                      className="px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-700 cursor-pointer transition-colors duration-200"
+                                      onClick={() => {
+                                        setActiveMenu(null);
+                                        renameColumn(col._id);
+                                      }}
+                                    >
+                                      ✏️ Rename
+                                    </li>
+                                    <li
+                                      className="px-4 py-2 text-gray-700 hover:bg-red-100 hover:text-red-700 cursor-pointer transition-colors duration-200"
+                                      onClick={() => {
+                                        setActiveMenu(null);
+                                        deleteColumn(col._id);
+                                      }}
+                                    >
+                                      ❌ Delete Column
+                                    </li>
+                                  </ul>
 
-                                      <span
-                                        className={`px-5 py-2 rounded text-white text-xs sm:text-sm ${
-                                          todo.priority === "high"
-                                            ? "bg-red-500"
-                                            : todo.priority === "medium"
-                                            ? "bg-yellow-500"
-                                            : "bg-green-500"
-                                        }`}
-                                      >
-                                        {todo.priority}
-                                      </span>
-                                    </div>
-                                  </div>
                                 </div>
                               )}
-                            </Draggable>
-                          ))
-                        ) : (
-                          <p className="text-gray-500 text-center mt-5  text-xl">
-                            No todos Here
-                          </p>
-                        )}
-                        {provided.placeholder}
-                      </div>
-                    </div>
-                  )}
-                </Droppable>
-              ))}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-3">
+                            {col.todos && col.todos.length > 0 ? (
+                              col.todos.map((todo, index) => (
+                                <Draggable
+                                  key={String(todo._id)}
+                                  draggableId={String(todo._id)}
+                                  index={index}
+                                >
+                                  {(provided, snapshot) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                      onClick={(e) => {
+                                        if (e.target.closest('.delete-btn, .edit-btn')) {
+                                          return;
+                                        }
+
+                                        if (isDragging) {
+                                          return;
+                                        }
+
+                                        openViewModal(todo);
+                                      }}
+                                      style={{
+                                        ...provided.draggableProps.style,
+                                        zIndex: snapshot.isDragging ? 9999 : "auto",
+                                        opacity: snapshot.isDragging ? 0.9 : 1,
+                                        boxShadow: snapshot.isDragging ? "0 5px 10px rgba(0,0,0,0.2)" : "none",
+                                        pointerEvents: "auto"
+                                      }}
+                                      className={`todo-item relative bg-[#e9e8ee] p-5 rounded-lg shadow break-words cursor-pointer ${snapshot.isDragging
+                                        }`}
+                                    >
+                                      {/* Todo Number */}
+                                      <p className="absolute top-0 left-0 bg-black text-white text-xs sm:text-sm font-bold px-[6px] flex items-center justify-center shadow rounded-br-2xl">
+                                        {index + 1}
+                                      </p>
+
+                                      {/* Todo Title & Delete */}
+                                      <div
+                                        className="mb-3"
+                                      >
+                                        <div className="relative pr-6">
+                                          <p className="text-base sm:text-lg font-semibold text-black break-words line-clamp-2">
+                                            {todo.title}
+                                          </p>
+                                          <MdDeleteOutline
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              deleteTodo(todo._id, todo.isDummy);
+                                            }}
+                                            className="absolute top-0 right-0 text-red-500 cursor-pointer hover:scale-110 duration-300 w-5 h-5 delete-btn"
+                                          />
+                                        </div>
+                                        <p className="text-gray-600 text-xs sm:text-sm break-words line-clamp-2">
+                                          {todo.description}
+                                        </p>
+
+                                      </div>
+
+                                      {/* Todo Footer */}
+                                      <div className="flex items-center justify-between w-full">
+                                        <div className="flex items-center gap-3 w-full justify-between">
+                                          <div className="flex gap-1 items-center">
+                                            <p className="bg-[#ECB811] text-white text-xs sm:text-sm font-semibold px-5 py-2 rounded">
+                                              {todo.day || "Thu"}
+                                            </p>
+                                          </div>
+
+                                          <span
+                                            className={`px-5 py-2 rounded text-white text-xs sm:text-sm ${todo.priority === "high"
+                                              ? "bg-red-500"
+                                              : todo.priority === "medium"
+                                                ? "bg-yellow-500"
+                                                : "bg-green-500"
+                                              }`}
+                                          >
+                                            {todo.priority}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </Draggable>
+                              ))
+                            ) : (
+                              <p className="text-gray-500 text-center pb-3  text-xl">
+                                No todos Here
+                              </p>
+                            )}
+                            {provided.placeholder}
+                          </div>
+                        </div>
+                      )}
+                    </Droppable>
+                  ))}
                   {boardProvided.placeholder}
                 </div>
               )}
@@ -913,13 +915,12 @@ export default function TodoPage() {
                   Priority : &nbsp;
                 </span>
                 <p
-                  className={`inline-block px-5 py-1 rounded-md text-white text-md ${
-                    selectedTodo.priority === "high"
-                      ? "bg-red-500"
-                      : selectedTodo.priority === "medium"
+                  className={`inline-block px-5 py-1 rounded-md text-white text-md ${selectedTodo.priority === "high"
+                    ? "bg-red-500"
+                    : selectedTodo.priority === "medium"
                       ? "bg-yellow-500"
                       : "bg-green-500"
-                  }`}
+                    }`}
                 >
                   {selectedTodo.priority}
                 </p>
@@ -988,11 +989,10 @@ export default function TodoPage() {
               <button
                 onClick={saveColumn}
                 disabled={isSavingColumn}
-                className={`px-4 py-2 rounded-lg cursor-pointer transition ${
-                  isSavingColumn
-                    ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-[#2B1887] text-white hover:scale-105 duration-300"
-                }`}
+                className={`px-4 py-2 rounded-lg cursor-pointer transition ${isSavingColumn
+                  ? "bg-gray-400 text-white cursor-not-allowed"
+                  : "bg-[#2B1887] text-white hover:scale-105 duration-300"
+                  }`}
               >
                 {isSavingColumn ? "Saving..." : "Save"}
               </button>

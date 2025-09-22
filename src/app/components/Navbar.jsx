@@ -43,20 +43,20 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="flex justify-between items-center py-3 sm:py-4 bg-white border-b border-gray-500 px-4 sm:px-8 relative">
+    <nav className="flex justify-between items-center py-3 sm:py-4 bg-gradient-to-r from-[#4e85dd] to-[#373B44]  border-b border-gray-500 px-4 sm:px-8 relative">
       {/* Left Logo */}
-      <h1 className="font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-900 cursor-pointer">
+      <h1 className="font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl text-white cursor-pointer">
         <Link href="/">Todo App</Link>
       </h1>
 
       {/* Center Title */}
-      <h1 className="text-gray-900 text-base sm:text-xl md:text-2xl font-bold text-center">
+      <h1 className="text-white text-base sm:text-xl md:text-2xl font-bold text-center">
         Todo Kanban
       </h1>
 
       {/* Right User Section */}
       <div className="relative flex items-center gap-2 sm:gap-3">
-        <span className="text-sm sm:text-base md:text-lg text-gray-900 truncate max-w-[100px] sm:max-w-[150px]">
+        <span className="text-sm sm:text-base md:text-lg text-white  truncate max-w-[100px] sm:max-w-[150px]">
           {user?.name || "Guest"}
         </span>
         <button

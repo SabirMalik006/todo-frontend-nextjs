@@ -42,7 +42,7 @@ export default function Settings() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    setLoading(true); 
+    setLoading(true);
 
     const token = localStorage.getItem("accessToken");
     let uploadedImageUrl = null;
@@ -105,146 +105,148 @@ export default function Settings() {
       }
       toast.error(msg);
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
   return (
     <>
-      <Navbar className="fixed top-0 left-0 w-full z-100" />
+      {/* Gradient background wrapper */}
+      <div className="min-h-screen w-full bg-gradient-to-r from-[#4e85dd] to-[#373B44]">
+        <Navbar className="fixed top-0 left-0 w-full z-100" />
 
-      <div className="w-full max-w-lg flex px-8 my-4">
-        <Link
-          href="/"
-          className="text-white font-medium text-start bg-[#2B1887] px-3 py-1 rounded-lg"
-        >
-          <IoReturnUpBackOutline className="w-6 h-6" />
-        </Link>
-      </div>
-
-      <main className="flex flex-col items-center justify-center min-h-[68vh] px-8">
-        <div className="w-full max-w-lg bg-[#e9e9e9e3] rounded-2xl shadow-2xl px-10 py-6 ">
-          {/* Profile Image Section */}
-          <div className="flex flex-col items-center">
-            <label className="mt-3 block text-gray-800 font-semibold text-3xl mb-2">
-              Change Profile Image
-            </label>
-
-            {/* Hidden input */}
-            <input
-              type="file"
-              id="fileInput"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                setImageFile(file);
-                setImagePreview(URL.createObjectURL(file));
-              }}
-              className="hidden"
-            />
-
-            {/* Preview area */}
-            <label
-              htmlFor="fileInput"
-              className="cursor-pointer mt-2 inline-block"
-            >
-              {imagePreview ? (
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-32 h-32 rounded-full object-cover hover:opacity-80 transition duration-200"
-                />
-              ) : (
-                <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center text-center hover:opacity-80 transition duration-200 mb-4">
-                  <span>
-                    <CiCamera className="h-7 w-7" />
-                  </span>
-                </div>
-              )}
-            </label>
-          </div>
-
-          {/* Change Name Section */}
-          <div className="mt-3">
-            <label htmlFor="name" className="text-lg font-medium text-gray-700">
-              Title
-            </label>
-            <input
-              id="name"
-              type="text"
-              placeholder="Enter new name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none text-black focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          {/* Email */}
-          <div className="mt-3">
-            <label htmlFor="email" className="text-lg font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              id="email"
-              type="text"
-              placeholder="Email"
-              value={user?.email || ""}
-              disabled
-              className="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none text-black bg-gray-200 cursor-not-allowed opacity-70"
-            />
-          </div>
-
-          {/* Change Password Section */}
-          <div className="mt-3">
-            <label className="text-lg font-medium text-gray-700">
-              Old Password
-            </label>
-            <input
-              type="password"
-              placeholder="Enter old password"
-              value={oldPassword}
-              onChange={(e) => setOldPassword(e.target.value)}
-              className="w-full mt-1 px-4 py-2 border rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"
-            />
-
-            <label className="text-lg font-medium text-gray-700">
-              New Password
-            </label>
-            <input
-              type="password"
-              placeholder="Enter new password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full mt-1 px-4 py-2 border rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"
-            />
-
-            <label className="text-lg font-medium text-gray-700">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              placeholder="Re-enter new password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full mt-1 px-4 py-2 border rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          {/* Save Button */}
-          <div className="mt-8">
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={loading}
-              className={`w-full bg-[#2B1887] text-white py-2 rounded-lg cursor-pointer font-semibold transition duration-300 ${
-                loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-80"
-              }`}
-            >
-              {loading ? "Saving..." : "Save All Changes"}
-            </button>
-          </div>
+        {/* Top section */}
+        <div className="w-full max-w-lg flex px-8 pt-5">
+          <Link
+            href="/"
+            className="text-white font-medium text-start bg-[#2B1887] px-3 py-1 rounded-lg"
+          >
+            <IoReturnUpBackOutline className="w-6 h-6" />
+          </Link>
         </div>
-      </main>
+
+        {/* Main content */}
+        <main className="flex flex-col items-center justify-center min-h-[68vh] px-8">
+          <div className="w-full max-w-lg bg-[#cce1f3] rounded-2xl shadow-2xl px-10 py-6">
+            {/* Profile Image Section */}
+            <div className="flex flex-col items-center">
+              <label className="mt-3 block text-gray-800 font-semibold text-3xl mb-2">
+                Change Profile Image
+              </label>
+
+              {/* Hidden input */}
+              <input
+                type="file"
+                id="fileInput"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  setImageFile(file);
+                  setImagePreview(URL.createObjectURL(file));
+                }}
+                className="hidden "
+              />
+
+              {/* Preview area */}
+              <label htmlFor="fileInput" className="cursor-pointer mt-2 inline-block">
+                {imagePreview ? (
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-32 h-32 rounded-full object-cover hover:opacity-80 transition duration-200"
+                  />
+                ) : (
+                  <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center hover:opacity-80 transition duration-200 mb-4">
+                    <span>
+                      <CiCamera className="h-7 w-7" />
+                    </span>
+                  </div>
+                )}
+              </label>
+            </div>
+
+            {/* Change Name Section */}
+            <div className="mt-3">
+              <label htmlFor="name" className="text-lg font-medium text-gray-700">
+                Title
+              </label>
+              <input
+                id="name"
+                type="text"
+                placeholder="Enter new name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none text-black focus:ring-2 focus:ring-indigo-500 border-gray-500"
+              />
+            </div>
+
+            {/* Email */}
+            <div className="mt-3">
+              <label htmlFor="email" className="text-lg font-medium text-gray-700">
+                Email
+              </label>
+              <input
+                id="email"
+                type="text"
+                placeholder="Email"
+                value={user?.email || ""}
+                disabled
+                className="w-full mt-1 px-4 py-2 border rounded-lg text-black bg-gray-200 cursor-not-allowed opacity-70 border-gray-500"
+              />
+            </div>
+
+            {/* Change Password Section */}
+            <div className="mt-3">
+              <label className="text-lg font-medium text-gray-700">
+                Old Password
+              </label>
+              <input
+                type="password"
+                placeholder="Enter old password"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                className="w-full mt-1 px-4 py-2 border rounded-lg text-black focus:outline-none mb-3 border-gray-500"
+              />
+
+              <label className="text-lg font-medium text-gray-700">
+                New Password
+              </label>
+              <input
+                type="password"
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full mt-1 px-4 py-2 border rounded-lg text-black focus:outline-none border-gray-500 mb-3"
+              />
+
+              <label className="text-lg font-medium text-gray-700">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                placeholder="Re-enter new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full mt-1 px-4 py-2 border rounded-lg text-black focus:outline-none border-gray-500"
+              />
+            </div>
+
+            {/* Save Button */}
+            <div className="mt-8">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={loading}
+                className={`w-full bg-[#2B1887] text-white py-2 rounded-lg cursor-pointer font-semibold transition duration-300 ${loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-80"
+                  }`}
+              >
+                {loading ? "Saving..." : "Save All Changes"}
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
     </>
+
   );
 }
