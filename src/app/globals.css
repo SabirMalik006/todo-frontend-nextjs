@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -8,13 +8,20 @@
 }
 
 * {
-  scrollbar-width: none; 
-  -ms-overflow-style: none; 
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.todo {
+/* .custom-shadow {
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 14px 28px, rgba(0, 0, 0, 0.08) 0px 10px 10px;
+} */
 
+.todo {
   height: 88vh;
+}
+
+body {
+  background: white;
 }
 
 @theme inline {
@@ -132,4 +139,3 @@
     @apply bg-background text-foreground;
   }
 }
-

@@ -1,7 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
-import BackgroundBeams from "../components/ui/background-beams";
+// import Background from "./components/Background.jsx"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,12 +21,14 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body cz-shortcut-listen="true"
+      <body
+        cz-shortcut-listen="true"
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* <BackgroundBeams className="opacity-70" /> */}
-        {children}
-        <Toaster position="top-right" reverseOrder={false} />
+        {/* <Background> */}
+          {children}
+          <Toaster position="top-right" reverseOrder={false} />
+        {/* </Background> */}
       </body>
     </html>
   );

@@ -41,8 +41,8 @@ export default function SignupPage() {
 
   return (
     <AuthRoute reverse>
-      <main className="relative flex h-screen w-full items-center justify-center bg-[#FBFCF8]">
-        <div className="shadow-input mx-auto w-full max-w-md rounded-none bg-[#C6Cfff] p-6 md:rounded-2xl md:p-8 dark:bg-black">
+      <main className="relative flex h-screen w-full items-center justify-center p-5 md:p-0 bg-[oklch(0.869_0.022_252.894)] ">
+        <div className="custom-shadow bg-white mx-auto w-full max-w-md  border border-[oklch(0.554_0.046_257.417)] p-6 rounded-2xl md:p-8 dark:bg-black ">
           {/* Heading */}
           <h2 className="text-2xl text-center font-bold text-neutral-800 dark:text-neutral-200">
             Welcome to Todo App
@@ -52,19 +52,18 @@ export default function SignupPage() {
           </p>
 
           {/* Signup Form */}
-          <form onSubmit={handleRegister} className="my-8">
+          <form onSubmit={handleRegister} className="my-8 ">
             <LabelInputContainer className="mb-4">
-              <Label htmlFor="name">Name</Label>
               <Input
-                id="name"
-                name="name"
-                placeholder="Enter your name"
-                type="text"
-                onChange={handleChange}
-                value={form.name}
-                required
-                className="focus:outline-none focus:ring-0 focus:transparent-none"
-              />
+              id="name"
+              name="name"
+              placeholder="Enter your name"
+              type="text"
+              onChange={handleChange}
+              value={form.name}
+              required
+              className="focus:outline-none focus:ring-0 focus:border-transparent border border-[oklch(0.554_0.046_257.417)] rounded-md"
+            />
             </LabelInputContainer>
 
             <LabelInputContainer className="mb-4">
@@ -77,7 +76,7 @@ export default function SignupPage() {
                 onChange={handleChange}
                 value={form.email}
                 required
-                className="focus:outline-none"
+                className="border border-[oklch(0.554_0.046_257.417)] rounded-md"
               />
             </LabelInputContainer>
 
@@ -91,37 +90,37 @@ export default function SignupPage() {
                 onChange={handleChange}
                 value={form.password}
                 required
-                className="focus:outline-none"
+                className="focus:outline-none border border-[oklch(0.554_0.046_257.417)] rounded-md"
               />
             </LabelInputContainer>
 
             <button
               type="submit"
-              className="group/btn relative block h-10 w-full rounded-md bg-black px-4 font-medium text-white"
+              className="group/btn cursor-pointer relative block h-10 w-full rounded-md bg-black px-4 font-medium text-white"
             >
               Sign Up
               <BottomGradient />
             </button>
           </form>
 
-          <div><p className="text-center  text-md" >OR</p></div>
+          <div className="flex w-full items-center justify-center">
+            <div className="flex-grow border-t border-[oklch(0.708_0_0)]"></div>
+            <span className="mx-4 text-center text-md font-medium text-gray-500">OR</span>
+            <div className="flex-grow border-t border-[oklch(0.708_0_0)]"></div>
+          </div>
 
-
-
-          {/* Divider */}
-          <div className=" my-4 h-[1px] w-full bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-neutral-700"></div>
 
           {/* Social Logins */}
-          <div className="flex flex-col space-y-3">
+          <div className="flex flex-col space-y-3 my-7">
             <button
               onClick={handleGoogleLogin}
               className="group/btn shadow-input relative flex h-10 w-full items-center 
-                         justify-center space-x-2 rounded-md bg-gray-50 px-4 font-medium 
-                         text-black dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_#262626]"
+                         justify-center space-x-2 rounded-md bg-[oklch(0.87_0_0)] px-4 font-medium 
+                         text-black dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_#262626] border border-[oklch(0.554_0.046_257.417)]"
               type="button"
             >
               <IconBrandGoogle className="h-4 w-4 text-neutral-800 dark:text-neutral-300" />
-              <span className="text-sm text-neutral-700 dark:text-neutral-300 bg-[#fffEFA] ">
+              <span className="text-sm text-neutral-700 dark:text-neutral-300  cursor-pointer  ">
                 Continue with Google
               </span>
               <BottomGradient />
@@ -129,12 +128,12 @@ export default function SignupPage() {
 
             <button
               className="group/btn shadow-input relative flex h-10 w-full items-center 
-                         justify-center space-x-2 rounded-md bg-gray-50 px-4 font-medium 
-                         text-black dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_#262626]"
+                         justify-center space-x-2 rounded-md bg-[oklch(0.87_0_0)] px-4 font-medium 
+                         text-black dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_#262626] border border-[oklch(0.554_0.046_257.417)]"
               type="button"
             >
               <IconBrandGithub className="h-4 w-4 text-neutral-800 dark:text-neutral-300" />
-              <span className="text-sm text-neutral-700 dark:text-neutral-300 ">
+              <span className="text-sm text-neutral-700 dark:text-neutral-300 cursor-pointer">
                 Continue with GitHub
               </span>
               <BottomGradient />
