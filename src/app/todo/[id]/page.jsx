@@ -32,7 +32,7 @@ export default function TodoPage() {
     if (!boardId) return;
     const fetch = async () => {
       try {
-        const bRes = await api.get(`/board/${boardId}`);
+        const bRes = await  api.get(`/board/${boardId}`); 
         setBoard(bRes.data);
         const cRes = await api.get(`/column/board/${boardId}`);
         setColumns(cRes.data);
@@ -50,25 +50,25 @@ export default function TodoPage() {
     setIsViewModalOpen(true);
   };
 
-  // Board reference for scrolling and drag operations
+
   const boardRef = useRef(null);
   const boardContainerRef = useRef(null);
 
-  // Refs for board scrolling
+
   const isManualScrolling = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
 
-  // Removed custom rAF auto-scroll; rely on library-native behavior
-  const cleanupScrolling = () => {};
 
-  // Handle manual board scrolling (when not dragging items)
+  const cleanupScrolling = () => { };
+
+
   const handleBoardMouseDown = (e) => {
-    // Don't scroll if we're clicking on columns, todos, or interactive elements
+
     if (isDragging) return;
     if (!boardContainerRef.current) return;
 
-    // Check if the click is on a column, todo, or interactive element
+
     const interactiveElements = e.target.closest(
       ".column, .todo-item, button, a, input, select, textarea"
     );
@@ -78,13 +78,13 @@ export default function TodoPage() {
     startX.current = e.pageX;
     scrollLeft.current = boardRef.current.scrollLeft;
 
-    // Change cursor to indicate grabbing
+
     if (boardContainerRef.current) {
       boardContainerRef.current.style.cursor = "grabbing";
     }
   };
 
-  // Set up event listeners for manual board scrolling
+
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isManualScrolling.current || !boardRef.current) return;
@@ -111,7 +111,7 @@ export default function TodoPage() {
     };
   }, []);
 
-  // Removed custom auto-scrolling during drag operations
+
 
   const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
@@ -412,27 +412,25 @@ export default function TodoPage() {
   };
 
   const onDragUpdate = useCallback((update) => {
-    // Improved column detection - only allow drop on column under mouse
+
     if (boardRef.current && update) {
-      // Reset all columns to normal state first
+
       const columnElements = boardRef.current.querySelectorAll(".column");
       columnElements.forEach((el) => {
         el.style.boxShadow = "";
-        el.style.opacity = "1"; // Original opacity restored
+        el.style.opacity = "1";
         el.style.border = "1px solid #D5CCFF";
       });
 
-      // Get mouse position for better detection
       const mouseX = update.clientX || 0;
       const mouseY = update.clientY || 0;
 
-      // Find ONLY the column directly under mouse cursor
       let columnUnderMouse = null;
 
       columnElements.forEach((column) => {
         const rect = column.getBoundingClientRect();
 
-        // Check if mouse is directly over this column
+
         if (
           mouseX >= rect.left &&
           mouseX <= rect.right &&
@@ -443,16 +441,16 @@ export default function TodoPage() {
         }
       });
 
-      // ONLY highlight column directly under mouse
+
       if (columnUnderMouse) {
-        // Make target column visible with border only
+
         columnUnderMouse.style.border = "2px solid #6E41E2";
 
-        // Force destination to be this column
+
         if (update.destination) {
           const columnId = columnUnderMouse.getAttribute("data-column-id");
           if (columnId && update.destination.droppableId !== columnId) {
-            // This will force react-beautiful-dnd to only consider this column
+
             update.destination.droppableId = columnId;
           }
         }
@@ -668,15 +666,14 @@ export default function TodoPage() {
                           {/* Column Header */}
                           <div className="flex justify-between mb-3 relative">
                             <h3
-                              className={`font-semibold text-[#2B1887] break-words ${
-                                columns.length > 6
+                              className={`font-semibold text-[#2B1887] break-words ${columns.length > 6
                                   ? "text-sm sm:text-base"
                                   : columns.length > 4
-                                  ? "text-lg sm:text-xl"
-                                  : columns.length > 2
-                                  ? "text-xl sm:text-2xl"
-                                  : "text-2xl sm:text-3xl"
-                              }`}
+                                    ? "text-lg sm:text-xl"
+                                    : columns.length > 2
+                                      ? "text-xl sm:text-2xl"
+                                      : "text-2xl sm:text-3xl"
+                                }`}
                             >
                               {col.name}
                             </h3>
@@ -811,13 +808,12 @@ export default function TodoPage() {
                                           </div>
 
                                           <span
-                                            className={`px-5 py-2 rounded text-white text-xs sm:text-sm ${
-                                              todo.priority === "high"
+                                            className={`px-5 py-2 rounded text-white text-xs sm:text-sm ${todo.priority === "high"
                                                 ? "bg-red-500"
                                                 : todo.priority === "medium"
-                                                ? "bg-yellow-500"
-                                                : "bg-green-500"
-                                            }`}
+                                                  ? "bg-yellow-500"
+                                                  : "bg-green-500"
+                                              }`}
                                           >
                                             {todo.priority}
                                           </span>
@@ -964,13 +960,12 @@ export default function TodoPage() {
                   Priority : &nbsp;
                 </span>
                 <p
-                  className={`inline-block px-5 py-1 rounded-md text-white text-md ${
-                    selectedTodo.priority === "high"
+                  className={`inline-block px-5 py-1 rounded-md text-white text-md ${selectedTodo.priority === "high"
                       ? "bg-red-500"
                       : selectedTodo.priority === "medium"
-                      ? "bg-yellow-500"
-                      : "bg-green-500"
-                  }`}
+                        ? "bg-yellow-500"
+                        : "bg-green-500"
+                    }`}
                 >
                   {selectedTodo.priority}
                 </p>
@@ -1039,11 +1034,10 @@ export default function TodoPage() {
               <button
                 onClick={saveColumn}
                 disabled={isSavingColumn}
-                className={`px-4 py-2 rounded-lg cursor-pointer transition ${
-                  isSavingColumn
+                className={`px-4 py-2 rounded-lg cursor-pointer transition ${isSavingColumn
                     ? "bg-gray-400 text-white cursor-not-allowed"
                     : "bg-[#2B1887] text-white hover:scale-105 duration-300"
-                }`}
+                  }`}
               >
                 {isSavingColumn ? "Saving..." : "Save"}
               </button>
