@@ -40,7 +40,7 @@ export default function LoginPage() {
       );
 
       toast.success("Login successful 🎉");
-      router.push("/");
+      router.push("/dashboard");
     } catch (err) {
       toast.error(err.response?.data?.message || "Invalid credentials ❌");
     }

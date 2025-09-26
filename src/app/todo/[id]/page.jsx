@@ -1,16 +1,19 @@
 "use client";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { MdDeleteOutline } from "react-icons/md";
-import Navbar from "../components/Navbar";
-import api from "../utils/api";
+import Navbar from "../../components/Navbar";
+import api from "../../utils/api";
 import toast from "react-hot-toast";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import AuthRoute from "../components/AuthRoute";
+import AuthRoute from "../../components/AuthRoute";
 import { TbDotsVertical } from "react-icons/tb";
 import { LiaEdit } from "react-icons/lia";
+import { useParams } from "next/navigation";
 
 export default function TodoPage() {
+  const { id: boardId } = useParams();
   const [columns, setColumns] = useState([]);
+  const [board, setBoard] = useState(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,6 +27,23 @@ export default function TodoPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedTodo, setSelectedTodo] = useState(null);
   const [isSavingColumn, setIsSavingColumn] = useState(false);
+
+  useEffect(() => {
+    if (!boardId) return;
+    const fetch = async () => {
+      try {
+        const bRes = await api.get(`/board/${boardId}`);
+        setBoard(bRes.data);
+        const cRes = await api.get(`/column/board/${boardId}`);
+        setColumns(cRes.data);
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Error loading board");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, [boardId]);
 
   const openViewModal = (todo) => {
     setSelectedTodo(todo);
@@ -40,7 +60,7 @@ export default function TodoPage() {
   const scrollLeft = useRef(0);
 
   // Removed custom rAF auto-scroll; rely on library-native behavior
-  const cleanupScrolling = () => { };
+  const cleanupScrolling = () => {};
 
   // Handle manual board scrolling (when not dragging items)
   const handleBoardMouseDown = (e) => {
@@ -49,7 +69,9 @@ export default function TodoPage() {
     if (!boardContainerRef.current) return;
 
     // Check if the click is on a column, todo, or interactive element
-    const interactiveElements = e.target.closest('.column, .todo-item, button, a, input, select, textarea');
+    const interactiveElements = e.target.closest(
+      ".column, .todo-item, button, a, input, select, textarea"
+    );
     if (interactiveElements) return;
 
     isManualScrolling.current = true;
@@ -58,7 +80,7 @@ export default function TodoPage() {
 
     // Change cursor to indicate grabbing
     if (boardContainerRef.current) {
-      boardContainerRef.current.style.cursor = 'grabbing';
+      boardContainerRef.current.style.cursor = "grabbing";
     }
   };
 
@@ -75,16 +97,16 @@ export default function TodoPage() {
     const handleMouseUp = () => {
       isManualScrolling.current = false;
       if (boardContainerRef.current) {
-        boardContainerRef.current.style.cursor = '';
+        boardContainerRef.current.style.cursor = "";
       }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
       cleanupScrolling();
     };
   }, []);
@@ -393,11 +415,11 @@ export default function TodoPage() {
     // Improved column detection - only allow drop on column under mouse
     if (boardRef.current && update) {
       // Reset all columns to normal state first
-      const columnElements = boardRef.current.querySelectorAll('.column');
-      columnElements.forEach(el => {
-        el.style.boxShadow = '';
-        el.style.opacity = '1'; // Original opacity restored
-        el.style.border = '1px solid #D5CCFF';
+      const columnElements = boardRef.current.querySelectorAll(".column");
+      columnElements.forEach((el) => {
+        el.style.boxShadow = "";
+        el.style.opacity = "1"; // Original opacity restored
+        el.style.border = "1px solid #D5CCFF";
       });
 
       // Get mouse position for better detection
@@ -407,12 +429,16 @@ export default function TodoPage() {
       // Find ONLY the column directly under mouse cursor
       let columnUnderMouse = null;
 
-      columnElements.forEach(column => {
+      columnElements.forEach((column) => {
         const rect = column.getBoundingClientRect();
 
         // Check if mouse is directly over this column
-        if (mouseX >= rect.left && mouseX <= rect.right &&
-          mouseY >= rect.top && mouseY <= rect.bottom) {
+        if (
+          mouseX >= rect.left &&
+          mouseX <= rect.right &&
+          mouseY >= rect.top &&
+          mouseY <= rect.bottom
+        ) {
           columnUnderMouse = column;
         }
       });
@@ -420,11 +446,11 @@ export default function TodoPage() {
       // ONLY highlight column directly under mouse
       if (columnUnderMouse) {
         // Make target column visible with border only
-        columnUnderMouse.style.border = '2px solid #6E41E2';
+        columnUnderMouse.style.border = "2px solid #6E41E2";
 
         // Force destination to be this column
         if (update.destination) {
-          const columnId = columnUnderMouse.getAttribute('data-column-id');
+          const columnId = columnUnderMouse.getAttribute("data-column-id");
           if (columnId && update.destination.droppableId !== columnId) {
             // This will force react-beautiful-dnd to only consider this column
             update.destination.droppableId = columnId;
@@ -471,13 +497,17 @@ export default function TodoPage() {
     setColumns(newColumns);
 
     if (boardRef.current) {
-      const columnElements = boardRef.current.querySelectorAll('.column');
+      const columnElements = boardRef.current.querySelectorAll(".column");
       const destColumnElement = Array.from(columnElements).find(
-        el => el.getAttribute('data-column-id') === dstColId
+        (el) => el.getAttribute("data-column-id") === dstColId
       );
 
       if (destColumnElement) {
-        destColumnElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        destColumnElement.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "center",
+        });
       }
     }
 
@@ -572,6 +602,7 @@ export default function TodoPage() {
     <>
       <AuthRoute />
       <Navbar />
+      <h1>{board?.title}</h1>
       <div className="h-full w-full bg-gradient-to-r from-[#4e85dd] to-[#373B44] todo pt-15">
         <div className="flex justify-end px-10 mb-4">
           <button
@@ -588,11 +619,12 @@ export default function TodoPage() {
             if (boardRef.current) {
               boardRef.current.style.backgroundColor = "#f9f9ff";
 
-              const columnElements = boardRef.current.querySelectorAll('.column');
-              columnElements.forEach(el => {
-                el.style.boxShadow = '';
-                el.style.opacity = '1';
-                el.style.border = '1px solid #D5CCFF';
+              const columnElements =
+                boardRef.current.querySelectorAll(".column");
+              columnElements.forEach((el) => {
+                el.style.boxShadow = "";
+                el.style.opacity = "1";
+                el.style.border = "1px solid #D5CCFF";
               });
             }
           }}
@@ -604,7 +636,12 @@ export default function TodoPage() {
             onMouseDown={handleBoardMouseDown}
             className="w-full h-[calc(100vh-50px)] select-none cursor-grab active:cursor-grabbing"
           >
-            <Droppable droppableId="board-scroll" direction="horizontal" isDropDisabled={true} type="TASK">
+            <Droppable
+              droppableId="board-scroll"
+              direction="horizontal"
+              isDropDisabled={true}
+              type="TASK"
+            >
               {(boardProvided) => (
                 <div
                   ref={(node) => {
@@ -615,7 +652,12 @@ export default function TodoPage() {
                   className="flex gap-6 bg-gradient-to-r from-[#4e85dd] to-[#373B44] px-6 lg:px-10 py-4 items-start overflow-x-auto h-full"
                 >
                   {columns.map((col) => (
-                    <Droppable key={col._id} droppableId={String(col._id)} type="TASK" ignoreContainerClipping={true}>
+                    <Droppable
+                      key={col._id}
+                      droppableId={String(col._id)}
+                      type="TASK"
+                      ignoreContainerClipping={true}
+                    >
                       {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
@@ -626,14 +668,15 @@ export default function TodoPage() {
                           {/* Column Header */}
                           <div className="flex justify-between mb-3 relative">
                             <h3
-                              className={`font-semibold text-[#2B1887] break-words ${columns.length > 6
-                                ? "text-sm sm:text-base"
-                                : columns.length > 4
+                              className={`font-semibold text-[#2B1887] break-words ${
+                                columns.length > 6
+                                  ? "text-sm sm:text-base"
+                                  : columns.length > 4
                                   ? "text-lg sm:text-xl"
                                   : columns.length > 2
-                                    ? "text-xl sm:text-2xl"
-                                    : "text-2xl sm:text-3xl"
-                                }`}
+                                  ? "text-xl sm:text-2xl"
+                                  : "text-2xl sm:text-3xl"
+                              }`}
                             >
                               {col.name}
                             </h3>
@@ -652,7 +695,6 @@ export default function TodoPage() {
                                   className="w-7 h-7 text-[#2B1887] cursor-pointer rounded-full p-1
              hover:bg-purple-300 transition-colors duration-300"
                                 />
-
                               </button>
 
                               {activeMenu === col._id && (
@@ -686,7 +728,6 @@ export default function TodoPage() {
                                       ❌ Delete Column
                                     </li>
                                   </ul>
-
                                 </div>
                               )}
                             </div>
@@ -706,7 +747,11 @@ export default function TodoPage() {
                                       {...provided.draggableProps}
                                       {...provided.dragHandleProps}
                                       onClick={(e) => {
-                                        if (e.target.closest('.delete-btn, .edit-btn')) {
+                                        if (
+                                          e.target.closest(
+                                            ".delete-btn, .edit-btn"
+                                          )
+                                        ) {
                                           return;
                                         }
 
@@ -718,13 +763,16 @@ export default function TodoPage() {
                                       }}
                                       style={{
                                         ...provided.draggableProps.style,
-                                        zIndex: snapshot.isDragging ? 9999 : "auto",
+                                        zIndex: snapshot.isDragging
+                                          ? 9999
+                                          : "auto",
                                         opacity: snapshot.isDragging ? 0.9 : 1,
-                                        boxShadow: snapshot.isDragging ? "0 5px 10px rgba(0,0,0,0.2)" : "none",
-                                        pointerEvents: "auto"
+                                        boxShadow: snapshot.isDragging
+                                          ? "0 5px 10px rgba(0,0,0,0.2)"
+                                          : "none",
+                                        pointerEvents: "auto",
                                       }}
-                                      className={`todo-item relative bg-[#e9e8ee] p-5 rounded-lg shadow break-words cursor-pointer ${snapshot.isDragging
-                                        }`}
+                                      className={`todo-item relative bg-[#e9e8ee] p-5 rounded-lg shadow break-words cursor-pointer ${snapshot.isDragging}`}
                                     >
                                       {/* Todo Number */}
                                       <p className="absolute top-0 left-0 bg-black text-white text-xs sm:text-sm font-bold px-[6px] flex items-center justify-center shadow rounded-br-2xl">
@@ -732,9 +780,7 @@ export default function TodoPage() {
                                       </p>
 
                                       {/* Todo Title & Delete */}
-                                      <div
-                                        className="mb-3"
-                                      >
+                                      <div className="mb-3">
                                         <div className="relative pr-6">
                                           <p className="text-base sm:text-lg font-semibold text-black break-words line-clamp-2">
                                             {todo.title}
@@ -742,7 +788,10 @@ export default function TodoPage() {
                                           <MdDeleteOutline
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              deleteTodo(todo._id, todo.isDummy);
+                                              deleteTodo(
+                                                todo._id,
+                                                todo.isDummy
+                                              );
                                             }}
                                             className="absolute top-0 right-0 text-red-500 cursor-pointer hover:scale-110 duration-300 w-5 h-5 delete-btn"
                                           />
@@ -750,7 +799,6 @@ export default function TodoPage() {
                                         <p className="text-gray-600 text-xs sm:text-sm break-words line-clamp-2">
                                           {todo.description}
                                         </p>
-
                                       </div>
 
                                       {/* Todo Footer */}
@@ -763,12 +811,13 @@ export default function TodoPage() {
                                           </div>
 
                                           <span
-                                            className={`px-5 py-2 rounded text-white text-xs sm:text-sm ${todo.priority === "high"
-                                              ? "bg-red-500"
-                                              : todo.priority === "medium"
+                                            className={`px-5 py-2 rounded text-white text-xs sm:text-sm ${
+                                              todo.priority === "high"
+                                                ? "bg-red-500"
+                                                : todo.priority === "medium"
                                                 ? "bg-yellow-500"
                                                 : "bg-green-500"
-                                              }`}
+                                            }`}
                                           >
                                             {todo.priority}
                                           </span>
@@ -915,12 +964,13 @@ export default function TodoPage() {
                   Priority : &nbsp;
                 </span>
                 <p
-                  className={`inline-block px-5 py-1 rounded-md text-white text-md ${selectedTodo.priority === "high"
-                    ? "bg-red-500"
-                    : selectedTodo.priority === "medium"
+                  className={`inline-block px-5 py-1 rounded-md text-white text-md ${
+                    selectedTodo.priority === "high"
+                      ? "bg-red-500"
+                      : selectedTodo.priority === "medium"
                       ? "bg-yellow-500"
                       : "bg-green-500"
-                    }`}
+                  }`}
                 >
                   {selectedTodo.priority}
                 </p>
@@ -989,10 +1039,11 @@ export default function TodoPage() {
               <button
                 onClick={saveColumn}
                 disabled={isSavingColumn}
-                className={`px-4 py-2 rounded-lg cursor-pointer transition ${isSavingColumn
-                  ? "bg-gray-400 text-white cursor-not-allowed"
-                  : "bg-[#2B1887] text-white hover:scale-105 duration-300"
-                  }`}
+                className={`px-4 py-2 rounded-lg cursor-pointer transition ${
+                  isSavingColumn
+                    ? "bg-gray-400 text-white cursor-not-allowed"
+                    : "bg-[#2B1887] text-white hover:scale-105 duration-300"
+                }`}
               >
                 {isSavingColumn ? "Saving..." : "Save"}
               </button>
