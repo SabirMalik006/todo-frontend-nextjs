@@ -9,6 +9,8 @@ import AuthRoute from "../../components/AuthRoute";
 import { TbDotsVertical } from "react-icons/tb";
 import { LiaEdit } from "react-icons/lia";
 import { useParams } from "next/navigation";
+import Teamsidebar from "../../components/TeamSideBar"; 
+// import InviteMember from "@/app/components/Invite  Member";
 
 export default function TodoPage() {
   const { id: boardId } = useParams();
@@ -28,22 +30,8 @@ export default function TodoPage() {
   const [selectedTodo, setSelectedTodo] = useState(null);
   const [isSavingColumn, setIsSavingColumn] = useState(false);
 
-  useEffect(() => {
-    if (!boardId) return;
-    const fetch = async () => {
-      try {
-        const bRes = await  api.get(`/board/${boardId}`); 
-        setBoard(bRes.data);
-        const cRes = await api.get(`/column/board/${boardId}`);
-        setColumns(cRes.data);
-      } catch (err) {
-        toast.error(err.response?.data?.message || "Error loading board");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
-  }, [boardId]);
+
+
 
   const openViewModal = (todo) => {
     setSelectedTodo(todo);
@@ -125,24 +113,31 @@ export default function TodoPage() {
 
   const fetchTodos = useCallback(async () => {
     try {
-      const headers = getAuthHeaders();
+      if (!boardId) return;
 
+      const headers = getAuthHeaders();
       const [colRes, todoRes] = await Promise.all([
-        api.get("/column", headers),
-        api.get("/todo", headers),
+        api.get(`/column/board/${boardId}`, headers),
+        api.get(`/todo/board/${boardId}`, headers),
       ]);
 
       const cols = colRes.data || [];
       const todos = todoRes.data || [];
 
+      // ✅ Fix: handle both object and string column IDs
       let withTodos = cols.map((col) => ({
         ...col,
         todos:
           todos
-            .filter((t) => String(t.column) === String(col._id))
+            .filter((t) => {
+              const todoColId =
+                typeof t.column === "object" ? t.column._id : t.column;
+              return String(todoColId) === String(col._id);
+            })
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) || [],
       }));
 
+      // ✅ Keep your dummy todo logic
       const allTodos = withTodos.flatMap((c) => c.todos || []);
       if (allTodos.length === 0 && withTodos.length >= 3) {
         withTodos[0].todos.push({
@@ -164,7 +159,6 @@ export default function TodoPage() {
             const dummyIndex = col.todos.findIndex((t) => t.isDummy);
             if (dummyIndex !== -1) {
               const [dummy] = col.todos.splice(dummyIndex, 1);
-
               const insertAt = Math.max(
                 0,
                 Math.min(savedDummy.order - 1, col.todos.length)
@@ -181,17 +175,48 @@ export default function TodoPage() {
       console.error("fetchTodos error:", err.response?.data || err.message);
       toast.error("Failed to fetch data");
     }
-  }, [getAuthHeaders]);
+  }, [getAuthHeaders, boardId]);
+
 
   useEffect(() => {
+    setColumns([]);
     fetchTodos();
-  }, [fetchTodos]);
+  }, [fetchTodos, boardId]);
 
   useEffect(() => {
     const handleClickOutside = () => setActiveMenu(null);
     window.addEventListener("click", handleClickOutside);
     return () => window.removeEventListener("click", handleClickOutside);
   }, []);
+
+
+  useEffect(() => {
+    if (!boardId) return;
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const headers = getAuthHeaders();
+
+        const [bRes, cRes] = await Promise.all([
+          api.get(`/board/${boardId}`, headers),
+          api.get(`/column/board/${boardId}`, headers),
+        ]);
+
+        setBoard(bRes.data);
+        setColumns(cRes.data);
+
+        await fetchTodos();
+      } catch (err) {
+        console.error("Error loading board:", err.response?.data || err.message);
+        toast.error(err.response?.data?.message || "Error loading board");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [boardId, getAuthHeaders, fetchTodos]);
 
   const openAddTodoForColumn = (colId) => {
     setEditingTodo(null);
@@ -247,6 +272,7 @@ export default function TodoPage() {
           priority,
           completed: editingTodo.completed ?? false,
           column: editingTodo.column ?? activeColumnForNewTodo,
+          board: boardId,
         };
 
         const res = await api.put(`/todo/${editingTodo._id}`, payload, headers);
@@ -297,6 +323,7 @@ export default function TodoPage() {
           description,
           priority,
           column: targetColId,
+          board: boardId,
         };
 
         const res = await api.post("/todo", payload, headers);
@@ -518,6 +545,7 @@ export default function TodoPage() {
         _id: moved._id,
         column: moved.column,
         order: moved.order,
+        board: boardId,
       };
       localStorage.setItem("dummyOrder", JSON.stringify(dummyPayload));
       return;
@@ -535,6 +563,7 @@ export default function TodoPage() {
             id: t._id,
             order: t.order ?? 0,
             column: col._id,
+            board: boardId,
           }))
       );
 
@@ -559,9 +588,10 @@ export default function TodoPage() {
 
       const colRes = await api.post(
         "/column",
-        { name: newColumnName },
+        { name: newColumnName, boardId: boardId },
         headers
       );
+
       let createdCol = colRes.data;
 
       if (columns.length === 0) {
@@ -571,6 +601,7 @@ export default function TodoPage() {
           priority: "medium",
           day: "Today",
           column: createdCol._id,
+          board: boardId,
         };
 
         try {
@@ -600,7 +631,9 @@ export default function TodoPage() {
     <>
       <AuthRoute />
       <Navbar />
-      <h1>{board?.title}</h1>
+      <Teamsidebar boardId={boardId} board={board} />
+      {/* <InviteMember boardId={boardId} /> */}
+      <h1 className="w-full bg-gradient-to-r from-[#4e85dd] to-[#373B44] text-white text-2xl pl-9 pt-4" >Board :  {board?.title}</h1>
       <div className="h-full w-full bg-gradient-to-r from-[#4e85dd] to-[#373B44] todo pt-15">
         <div className="flex justify-end px-10 mb-4">
           <button
@@ -667,12 +700,12 @@ export default function TodoPage() {
                           <div className="flex justify-between mb-3 relative">
                             <h3
                               className={`font-semibold text-[#2B1887] break-words ${columns.length > 6
-                                  ? "text-sm sm:text-base"
-                                  : columns.length > 4
-                                    ? "text-lg sm:text-xl"
-                                    : columns.length > 2
-                                      ? "text-xl sm:text-2xl"
-                                      : "text-2xl sm:text-3xl"
+                                ? "text-sm sm:text-base"
+                                : columns.length > 4
+                                  ? "text-lg sm:text-xl"
+                                  : columns.length > 2
+                                    ? "text-xl sm:text-2xl"
+                                    : "text-2xl sm:text-3xl"
                                 }`}
                             >
                               {col.name}
@@ -809,10 +842,10 @@ export default function TodoPage() {
 
                                           <span
                                             className={`px-5 py-2 rounded text-white text-xs sm:text-sm ${todo.priority === "high"
-                                                ? "bg-red-500"
-                                                : todo.priority === "medium"
-                                                  ? "bg-yellow-500"
-                                                  : "bg-green-500"
+                                              ? "bg-red-500"
+                                              : todo.priority === "medium"
+                                                ? "bg-yellow-500"
+                                                : "bg-green-500"
                                               }`}
                                           >
                                             {todo.priority}
@@ -961,10 +994,10 @@ export default function TodoPage() {
                 </span>
                 <p
                   className={`inline-block px-5 py-1 rounded-md text-white text-md ${selectedTodo.priority === "high"
-                      ? "bg-red-500"
-                      : selectedTodo.priority === "medium"
-                        ? "bg-yellow-500"
-                        : "bg-green-500"
+                    ? "bg-red-500"
+                    : selectedTodo.priority === "medium"
+                      ? "bg-yellow-500"
+                      : "bg-green-500"
                     }`}
                 >
                   {selectedTodo.priority}
@@ -1035,8 +1068,8 @@ export default function TodoPage() {
                 onClick={saveColumn}
                 disabled={isSavingColumn}
                 className={`px-4 py-2 rounded-lg cursor-pointer transition ${isSavingColumn
-                    ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-[#2B1887] text-white hover:scale-105 duration-300"
+                  ? "bg-gray-400 text-white cursor-not-allowed"
+                  : "bg-[#2B1887] text-white hover:scale-105 duration-300"
                   }`}
               >
                 {isSavingColumn ? "Saving..." : "Save"}

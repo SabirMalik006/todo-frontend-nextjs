@@ -3,28 +3,36 @@
 import { useState, useEffect } from "react";
 import LogoutButton from "../components/Logout";
 import Link from "next/link";
-import axios from "axios";
-import toast from "react-hot-toast";
 import { IoSettingsOutline } from "react-icons/io5";
 import api from "../utils/api";
+import toast from "react-hot-toast";
+import { useParams } from "next/navigation";
 
 export default function Navbar() {
+  const { id: routeBoardId } = useParams();
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [boardId, setBoardId] = useState(null);
+
+
+  useEffect(() => {
+    if (routeBoardId) {
+      setBoardId(routeBoardId);
+      localStorage.setItem("lastBoardId", routeBoardId);
+    } else {
+      const storedId = localStorage.getItem("lastBoardId");
+      if (storedId) setBoardId(storedId);
+    }
+  }, [routeBoardId]);
 
   const fetchUser = async () => {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) return;
 
-      const res = await api.get(
-        "https://todo-backend-w-nextjs-production.up.railway.app/api/auth/me",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await api.get("/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       setUser(res.data);
     } catch (error) {
@@ -43,10 +51,13 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="flex justify-between items-center py-3 sm:py-4 bg-gradient-to-r from-[#4e85dd] to-[#373B44]  border-b border-gray-500 px-4 sm:px-8 relative">
+    <nav className="flex justify-between items-center py-3 sm:py-4 bg-gradient-to-r from-[#4e85dd] to-[#373B44] border-b border-gray-500 px-4 sm:px-8 relative">
       {/* Left Logo */}
       <h1 className="font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl text-white cursor-pointer">
-        <Link href="/">Todo App</Link>
+       
+        <Link href="/dashboard">
+          Todo App
+        </Link>
       </h1>
 
       {/* Center Title */}
@@ -56,9 +67,10 @@ export default function Navbar() {
 
       {/* Right User Section */}
       <div className="relative flex items-center gap-2 sm:gap-3">
-        <span className="text-sm sm:text-base md:text-lg text-white  truncate max-w-[100px] sm:max-w-[150px]">
+        <span className="text-sm sm:text-base md:text-lg text-white truncate max-w-[100px] sm:max-w-[150px]">
           {user?.name || "Guest"}
         </span>
+
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 text-[#2B1887] font-bold flex items-center justify-center cursor-pointer overflow-hidden"
@@ -77,7 +89,7 @@ export default function Navbar() {
         {/* Dropdown Menu */}
         {menuOpen && (
           <div className="absolute right-2 sm:right-7 top-10 sm:top-12 mt-2 w-56 sm:w-72 bg-white/95 rounded-lg shadow-2xl p-4 sm:p-5 z-50">
-            <div className="mb-3 sm:mb-4 border-b border-gray-300 pb-3 sm:pb-4 text-left flex flex-col items-start gap-1 ">
+            <div className="mb-3 sm:mb-4 border-b border-gray-300 pb-3 sm:pb-4 text-left flex flex-col items-start gap-1">
               <h2 className="text-base sm:text-lg font-medium text-gray-900 tracking-wide">
                 {user?.name || "Guest User"}
               </h2>
@@ -86,7 +98,6 @@ export default function Navbar() {
               </p>
             </div>
 
-            {/* Settings */}
             <Link
               href="/settingss"
               className="px-3 sm:px-4 py-1 sm:py-2 rounded-2xl text-sm sm:text-base text-gray-700 hover:opacity-70 hover:scale-105 transform duration-200 flex justify-center items-center gap-2 w-full"
@@ -95,7 +106,6 @@ export default function Navbar() {
               Settings
             </Link>
 
-            {/* Logout */}
             <LogoutButton />
           </div>
         )}

@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { IoReturnUpBackOutline } from "react-icons/io5";
 import api from "../utils/api";
 import { CiCamera } from "react-icons/ci";
+import { useParams } from "next/navigation";
 
 export default function Settings() {
   const [name, setName] = useState("");
@@ -16,7 +17,20 @@ export default function Settings() {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false); // 🔥 new loading state
+  const [loading, setLoading] = useState(false);
+  const { id: routeBoardId } = useParams();
+  const [boardId, setBoardId] = useState(null);
+
+  // ✅ Get boardId from route or localStorage
+  useEffect(() => {
+    if (routeBoardId) {
+      setBoardId(routeBoardId);
+      localStorage.setItem("lastBoardId", routeBoardId);
+    } else {
+      const saved = localStorage.getItem("lastBoardId");
+      if (saved) setBoardId(saved);
+    }
+  }, [routeBoardId]);
 
   const fetchUser = async () => {
     try {
@@ -32,7 +46,7 @@ export default function Settings() {
       setImagePreview(res.data.image || null);
     } catch (error) {
       console.error(error);
-      toast.error(" Failed to fetch user info");
+      toast.error("Failed to fetch user info");
     }
   };
 
@@ -117,8 +131,9 @@ export default function Settings() {
 
         {/* Top section */}
         <div className="w-full max-w-lg flex px-8 pt-5">
+          {/* ✅ Back button uses boardId or falls back to /todo */}
           <Link
-            href="/"
+            href={boardId ? `/todo/${boardId}` : "/todo"}
             className="text-white font-medium text-start bg-[#2B1887] px-3 py-1 rounded-lg"
           >
             <IoReturnUpBackOutline className="w-6 h-6" />
@@ -134,7 +149,6 @@ export default function Settings() {
                 Change Profile Image
               </label>
 
-              {/* Hidden input */}
               <input
                 type="file"
                 id="fileInput"
@@ -144,10 +158,9 @@ export default function Settings() {
                   setImageFile(file);
                   setImagePreview(URL.createObjectURL(file));
                 }}
-                className="hidden "
+                className="hidden"
               />
 
-              {/* Preview area */}
               <label htmlFor="fileInput" className="cursor-pointer mt-2 inline-block">
                 {imagePreview ? (
                   <img
@@ -157,9 +170,7 @@ export default function Settings() {
                   />
                 ) : (
                   <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center hover:opacity-80 transition duration-200 mb-4">
-                    <span>
-                      <CiCamera className="h-7 w-7" />
-                    </span>
+                    <CiCamera className="h-7 w-7" />
                   </div>
                 )}
               </label>
@@ -197,9 +208,7 @@ export default function Settings() {
 
             {/* Change Password Section */}
             <div className="mt-3">
-              <label className="text-lg font-medium text-gray-700">
-                Old Password
-              </label>
+              <label className="text-lg font-medium text-gray-700">Old Password</label>
               <input
                 type="password"
                 placeholder="Enter old password"
@@ -208,9 +217,7 @@ export default function Settings() {
                 className="w-full mt-1 px-4 py-2 border rounded-lg text-black focus:outline-none mb-3 border-gray-500"
               />
 
-              <label className="text-lg font-medium text-gray-700">
-                New Password
-              </label>
+              <label className="text-lg font-medium text-gray-700">New Password</label>
               <input
                 type="password"
                 placeholder="Enter new password"
@@ -219,9 +226,7 @@ export default function Settings() {
                 className="w-full mt-1 px-4 py-2 border rounded-lg text-black focus:outline-none border-gray-500 mb-3"
               />
 
-              <label className="text-lg font-medium text-gray-700">
-                Confirm Password
-              </label>
+              <label className="text-lg font-medium text-gray-700">Confirm Password</label>
               <input
                 type="password"
                 placeholder="Re-enter new password"
@@ -237,8 +242,9 @@ export default function Settings() {
                 type="button"
                 onClick={handleSave}
                 disabled={loading}
-                className={`w-full bg-[#2B1887] text-white py-2 rounded-lg cursor-pointer font-semibold transition duration-300 ${loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-80"
-                  }`}
+                className={`w-full bg-[#2B1887] text-white py-2 rounded-lg cursor-pointer font-semibold transition duration-300 ${
+                  loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-80"
+                }`}
               >
                 {loading ? "Saving..." : "Save All Changes"}
               </button>
@@ -247,6 +253,5 @@ export default function Settings() {
         </main>
       </div>
     </>
-
   );
 }

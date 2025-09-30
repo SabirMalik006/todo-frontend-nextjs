@@ -5,6 +5,7 @@ import api from "../utils/api";
 import AuthRoute from "../components/AuthRoute";
 import { FaTrash, FaEdit, FaPlus } from "react-icons/fa";
 import { toast } from "react-hot-toast";
+import Navbar from "../components/Navbar";
 
 export default function Dashboard() {
   const [boards, setBoards] = useState([]);
@@ -91,7 +92,8 @@ export default function Dashboard() {
 
   return (
     <AuthRoute>
-      <div className="min-h-screen bg-slate-100 flex flex-col items-center py-12 px-6">
+      <Navbar/>
+      <div className="min-h-screen bg-slate-100 flex flex-col items-center py-12 px-6 mt-10">
         <div className="flex justify-between w-full max-w-5xl mb-10">
           <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight">
             My Boards
