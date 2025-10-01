@@ -54,17 +54,17 @@ export default function SignupPage() {
           {/* Signup Form */}
           <form onSubmit={handleRegister} className="my-5 ">
             <LabelInputContainer className="mb-4">
-            <label htmlFor="name">Name</label>
+              <label htmlFor="name">Name</label>
               <Input
-              id="name"
-              name="name"
-              placeholder="Enter your name"
-              type="text"
-              onChange={handleChange}
-              value={form.name}
-              required
-              className="focus:outline-none focus:ring-0 focus:border-transparent border border-[oklch(0.554_0.046_257.417)] rounded-md"
-            />
+                id="name"
+                name="name"
+                placeholder="Enter your name"
+                type="text"
+                onChange={handleChange}
+                value={form.name}
+                required
+                className="focus:outline-none focus:ring-0 focus:border-transparent border border-[oklch(0.554_0.046_257.417)] rounded-md"
+              />
             </LabelInputContainer>
 
             <LabelInputContainer className="mb-4">
@@ -100,7 +100,6 @@ export default function SignupPage() {
               className="group/btn cursor-pointer relative block h-10 w-full rounded-md bg-black px-4 font-medium text-white"
             >
               Sign Up
-              <BottomGradient />
             </button>
           </form>
 
@@ -116,15 +115,14 @@ export default function SignupPage() {
             <button
               onClick={handleGoogleLogin}
               className="group/btn shadow-input relative flex h-10 w-full items-center 
-                         justify-center space-x-2 rounded-md bg-[oklch(0.87_0_0)] px-4 font-medium 
+                         justify-center space-x-2 rounded-md  px-4 font-medium 
                          text-black dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_#262626] border border-[oklch(0.554_0.046_257.417)]"
               type="button"
             >
               <IconBrandGoogle className="h-4 w-4 text-neutral-800 dark:text-neutral-300" />
-              <span className="text-sm text-neutral-700 dark:text-neutral-300  cursor-pointer  ">
+              <span className="text-sm text-neutral-700 dark:text-neutral-300  cursor-pointer   ">
                 Continue with Google
               </span>
-              <BottomGradient />
             </button>
           </div>
 
@@ -141,17 +139,7 @@ export default function SignupPage() {
   );
 }
 
-/* Helper components */
-const BottomGradient = () => (
-  <>
-    <span className="absolute inset-x-0 -bottom-px block h-px w-full 
-                     bg-gradient-to-r from-transparent via-cyan-500 to-transparent 
-                     opacity-0 transition duration-500 group-hover/btn:opacity-100" />
-    <span className="absolute inset-x-10 -bottom-px mx-auto block h-px w-1/2 
-                     bg-gradient-to-r from-transparent via-indigo-500 to-transparent 
-                     opacity-0 blur-sm transition duration-500 group-hover/btn:opacity-100" />
-  </>
-);
+
 
 const LabelInputContainer = ({ children, className }) => {
   return (

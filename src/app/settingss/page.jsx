@@ -21,7 +21,7 @@ export default function Settings() {
   const { id: routeBoardId } = useParams();
   const [boardId, setBoardId] = useState(null);
 
-  
+
   useEffect(() => {
     if (routeBoardId) {
       setBoardId(routeBoardId);
@@ -125,13 +125,13 @@ export default function Settings() {
 
   return (
     <>
-      {/* Gradient background wrapper */}
+
       <div className="min-h-screen w-full bg-gradient-to-r from-[#4e85dd] to-[#373B44]">
         <Navbar className="fixed top-0 left-0 w-full z-100" />
 
-        {/* Top section */}
-        <div className="w-full max-w-lg flex px-8 pt-5">
-          {/* ✅ Back button uses boardId or falls back to /todo */}
+
+        <div className="w-full max-w-lg flex px-8 pt-5 mb-5 ">
+
           <Link
             href={boardId ? `/todo/${boardId}` : "/todo"}
             className="text-white font-medium text-start bg-[#2B1887] px-3 py-1 rounded-lg"
@@ -140,10 +140,10 @@ export default function Settings() {
           </Link>
         </div>
 
-        {/* Main content */}
+
         <main className="flex flex-col items-center justify-center min-h-[68vh] px-8">
-          <div className="w-full max-w-lg bg-[#cce1f3] rounded-2xl shadow-2xl px-10 py-6">
-            {/* Profile Image Section */}
+          <div className="w-full max-w-lg bg-[#cce1f3] rounded-2xl shadow-2xl px-10 py-6 mb-4">
+
             <div className="flex flex-col items-center">
               <label className="mt-3 block text-gray-800 font-semibold text-3xl mb-2">
                 Change Profile Image
@@ -176,7 +176,7 @@ export default function Settings() {
               </label>
             </div>
 
-            {/* Change Name Section */}
+
             <div className="mt-3">
               <label htmlFor="name" className="text-lg font-medium text-gray-700">
                 Title
@@ -191,7 +191,7 @@ export default function Settings() {
               />
             </div>
 
-            {/* Email */}
+
             <div className="mt-3">
               <label htmlFor="email" className="text-lg font-medium text-gray-700">
                 Email
@@ -206,7 +206,7 @@ export default function Settings() {
               />
             </div>
 
-            {/* Change Password Section */}
+
             <div className="mt-3">
               <label className="text-lg font-medium text-gray-700">Old Password</label>
               <input
@@ -236,15 +236,14 @@ export default function Settings() {
               />
             </div>
 
-            {/* Save Button */}
+
             <div className="mt-8">
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={loading}
-                className={`w-full bg-[#2B1887] text-white py-2 rounded-lg cursor-pointer font-semibold transition duration-300 ${
-                  loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-80"
-                }`}
+                className={`w-full bg-[#2B1887] text-white py-2 rounded-lg cursor-pointer font-semibold transition duration-300 ${loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-80"
+                  }`}
               >
                 {loading ? "Saving..." : "Save All Changes"}
               </button>

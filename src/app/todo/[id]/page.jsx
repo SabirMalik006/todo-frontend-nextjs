@@ -9,7 +9,8 @@ import AuthRoute from "../../components/AuthRoute";
 import { TbDotsVertical } from "react-icons/tb";
 import { LiaEdit } from "react-icons/lia";
 import { useParams } from "next/navigation";
-import Teamsidebar from "../../components/TeamSideBar"; 
+import Teamsidebar from "../../components/TeamSideBar";
+import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 // import InviteMember from "@/app/components/Invite  Member";
 
 export default function TodoPage() {
@@ -633,8 +634,10 @@ export default function TodoPage() {
       <Navbar />
       <Teamsidebar boardId={boardId} board={board} />
       {/* <InviteMember boardId={boardId} /> */}
-      <h1 className="w-full bg-gradient-to-r from-[#4e85dd] to-[#373B44] text-white text-2xl pl-9 pt-4" >Board :  {board?.title}</h1>
-      <div className="h-full w-full bg-gradient-to-r from-[#4e85dd] to-[#373B44] todo pt-15">
+      <h1 className="w-full bg-[oklch(96.7%_0.003_264.542)] text-gray-800 text-2xl font-semibold border-b border-gray-200 shadow-sm px-8 py-4 rounded-t-lg">
+        Board: <span className="text-[#2B1887]">{board?.title}</span>
+      </h1>
+      <div className="h-full w-full bg-[oklch(96.7%_0.003_264.542)] todo pt-15">
         <div className="flex justify-end px-10 mb-4">
           <button
             onClick={() => setIsColumnModalOpen(true)}
@@ -643,7 +646,6 @@ export default function TodoPage() {
             + Add Column
           </button>
         </div>
-
         <DragDropContext
           onDragStart={(start) => {
             setIsDragging(true);
@@ -680,7 +682,7 @@ export default function TodoPage() {
                     boardProvided.innerRef(node);
                   }}
                   {...boardProvided.droppableProps}
-                  className="flex gap-6 bg-gradient-to-r from-[#4e85dd] to-[#373B44] px-6 lg:px-10 py-4 items-start overflow-x-auto h-full"
+                  className="flex gap-6 bg-[oklch(96.7%_0.003_264.542)] px-6 lg:px-10 py-4 items-start overflow-x-auto h-full"
                 >
                   {columns.map((col) => (
                     <Droppable
@@ -694,12 +696,12 @@ export default function TodoPage() {
                           ref={provided.innerRef}
                           {...provided.droppableProps}
                           data-column-id={String(col._id)}
-                          className="column bg-[#D5CCFF] py-5 px-3 rounded-2xl flex flex-col min-w-[220px] max-w-[820px] w-full min-h-[135px] max-h-[calc(100vh-160px)] overflow-y-auto"
+                          className="column bg-[oklch(86.9%_0.022_252.894)] py-5 px-3 rounded-2xl flex flex-col min-w-[320px] max-w-[820px] w-full min-h-[180px] max-h-[calc(100vh-160px)] overflow-y-auto"
                         >
                           {/* Column Header */}
                           <div className="flex justify-between mb-3 relative">
                             <h3
-                              className={`font-semibold text-[#2B1887] break-words ${columns.length > 6
+                              className={`font-semibold text-[#2B1887] break-words overflow-hidden ${columns.length > 6
                                 ? "text-sm sm:text-base"
                                 : columns.length > 4
                                   ? "text-lg sm:text-xl"
@@ -707,6 +709,12 @@ export default function TodoPage() {
                                     ? "text-xl sm:text-2xl"
                                     : "text-2xl sm:text-3xl"
                                 }`}
+                              style={{
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                wordBreak: 'break-word'
+                              }}
                             >
                               {col.name}
                             </h3>
@@ -723,39 +731,42 @@ export default function TodoPage() {
                               >
                                 <TbDotsVertical
                                   className="w-7 h-7 text-[#2B1887] cursor-pointer rounded-full p-1
-             hover:bg-purple-300 transition-colors duration-300"
+         hover:bg-purple-300 transition-colors duration-300"
                                 />
                               </button>
 
                               {activeMenu === col._id && (
-                                <div className="absolute right-0 top-0 w-40 bg-white rounded-lg shadow-lg z-20">
+                                <div className="absolute right-7 top-6 w-40 bg-white rounded-lg shadow-lg z-20">
                                   <ul className="flex flex-col text-sm rounded-lg overflow-hidden shadow-md border border-gray-200 bg-white">
                                     <li
-                                      className="px-4 py-2 text-gray-700 hover:bg-green-100 hover:text-green-700 cursor-pointer transition-colors duration-200"
+                                      className="px-4 py-2 text-gray-700 hover:bg-green-100 hover:text-green-700 cursor-pointer transition-colors duration-200 flex items-center gap-2"
                                       onClick={() => {
                                         setActiveMenu(null);
                                         openAddTodoForColumn(col._id);
                                       }}
                                     >
-                                      ➕ Add Todo
+                                      <FaPlus size={12} />
+                                      Add Todo
                                     </li>
                                     <li
-                                      className="px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-700 cursor-pointer transition-colors duration-200"
+                                      className="px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-700 cursor-pointer transition-colors duration-200 flex items-center gap-2"
                                       onClick={() => {
                                         setActiveMenu(null);
                                         renameColumn(col._id);
                                       }}
                                     >
-                                      ✏️ Rename
+                                      <FaEdit size={12} />
+                                      Rename
                                     </li>
                                     <li
-                                      className="px-4 py-2 text-gray-700 hover:bg-red-100 hover:text-red-700 cursor-pointer transition-colors duration-200"
+                                      className="px-4 py-2 text-gray-700 hover:bg-red-100 hover:text-red-700 cursor-pointer transition-colors duration-200 flex items-center gap-2"
                                       onClick={() => {
                                         setActiveMenu(null);
                                         deleteColumn(col._id);
                                       }}
                                     >
-                                      ❌ Delete Column
+                                      <FaTrash size={12} />
+                                      Delete Column
                                     </li>
                                   </ul>
                                 </div>
