@@ -14,14 +14,14 @@ export default function TeamSidebar({ boardId }) {
   const [boardOwnerId, setBoardOwnerId] = useState(null);
   const [inviteLink, setInviteLink] = useState("");
 
-  // ✅ Set invite link safely (client only)
+  
   useEffect(() => {
     if (typeof window !== "undefined" && boardId) {
       setInviteLink(`${window.location.origin}/invite/${boardId}`);
     }
   }, [boardId]);
 
-  // ✅ Fetch current user
+  
   const fetchCurrentUser = async () => {
     try {
       const token = localStorage.getItem("accessToken");
@@ -35,7 +35,7 @@ export default function TeamSidebar({ boardId }) {
     }
   };
 
-  // ✅ Fetch team members (GET /board-team/board/:boardId)
+  
   const fetchTeamMembers = async () => {
     if (!boardId) return;
     try {
@@ -45,7 +45,7 @@ export default function TeamSidebar({ boardId }) {
       setBoardOwnerId(res.data.ownerId || null);
     } catch (err) {
       if (err.response?.status === 404) {
-        setTeamMembers([]); // no team yet
+        setTeamMembers([]); 
       } else {
         console.error("fetchTeamMembers error:", err);
         toast.error("Failed to load team members");
@@ -63,7 +63,7 @@ export default function TeamSidebar({ boardId }) {
     if (isOpen && boardId) fetchTeamMembers();
   }, [isOpen, boardId]);
 
-  // ✅ Invite member (POST /board-team/board/:boardId/invite)
+
   const handleInviteMember = async () => {
     if (!inviteEmail.trim()) return toast.error("Enter an email address");
     if (!boardId) return toast.error("Board ID missing");
@@ -87,7 +87,7 @@ export default function TeamSidebar({ boardId }) {
     }
   };
 
-  // ✅ Remove member (DELETE /board-team/board/:boardId/members/:memberId)
+
   const handleRemoveMember = async (memberId) => {
     if (!boardId) return toast.error("Board ID missing");
     try {
@@ -103,7 +103,7 @@ export default function TeamSidebar({ boardId }) {
     }
   };
 
-  // ✅ Helper: Display name
+
   const getDisplayName = (member) => {
     if (member.name && member.name.trim() !== "") return member.name;
 
@@ -120,7 +120,7 @@ export default function TeamSidebar({ boardId }) {
 
   return (
     <>
-      {/* Floating Toggle */}
+
       <button
         onClick={() => setIsOpen(true)}
         className="fixed right-9 top-20 z-30 bg-[#2B1887] text-white p-3 rounded-full shadow-lg hover:bg-[#4321a8] transition-all hover:scale-110"
@@ -136,13 +136,13 @@ export default function TeamSidebar({ boardId }) {
         />
       )}
 
-      {/* Sidebar */}
+
       <div
         className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {/* Header */}
+
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center gap-3">
             <FiUsers className="w-6 h-6 text-[#2B1887]" />
@@ -156,13 +156,13 @@ export default function TeamSidebar({ boardId }) {
           </button>
         </div>
 
-        {/* Invite Section */}
+
         <div className="p-6 border-b">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
             Invite to Board
           </h3>
 
-          {/* Invite by Email */}
+
           <div className="flex gap-2 mb-4">
             <input
               type="email"
@@ -185,7 +185,7 @@ export default function TeamSidebar({ boardId }) {
             </button>
           </div>
 
-          {/* Invite by Link */}
+
           <div className="flex items-center gap-2">
             <input
               readOnly
@@ -204,7 +204,7 @@ export default function TeamSidebar({ boardId }) {
           </div>
         </div>
 
-        {/* Members List */}
+
         <div className="flex-1 overflow-y-auto p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
             Members ({teamMembers.length})
@@ -258,7 +258,7 @@ export default function TeamSidebar({ boardId }) {
                     </div>
                   </div>
 
-                  {/* ✅ Hide delete for owner or self */}
+
                   {!isOwner && !isSelf && member.status !== "pending" && (
                     <button
                       onClick={() =>

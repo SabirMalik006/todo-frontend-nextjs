@@ -17,7 +17,7 @@ export default function SignupPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // 🔹 Register API
+
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
@@ -34,14 +34,14 @@ export default function SignupPage() {
     }
   };
 
-  // 🔹 Google Login
+
   const handleGoogleLogin = () => {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
   };
 
   return (
     <AuthRoute reverse>
-      <main className="relative flex h-screen w-full items-center justify-center p-5 md:p-0 bg-[oklch(0.869_0.022_252.894)] ">
+      <main className=" relative flex h-screen w-full items-center justify-center p-5 md:p-0 bg-[oklch(0.869_0.022_252.894)] ">
         <div className="custom-shadow bg-white mx-auto w-full max-w-md  border border-[oklch(0.554_0.046_257.417)] p-6 rounded-2xl md:p-8 dark:bg-black ">
           {/* Heading */}
           <h2 className="text-2xl text-center font-bold text-neutral-800 dark:text-neutral-200">
@@ -52,8 +52,9 @@ export default function SignupPage() {
           </p>
 
           {/* Signup Form */}
-          <form onSubmit={handleRegister} className="my-8 ">
+          <form onSubmit={handleRegister} className="my-5 ">
             <LabelInputContainer className="mb-4">
+            <label htmlFor="name">Name</label>
               <Input
               id="name"
               name="name"
@@ -122,19 +123,6 @@ export default function SignupPage() {
               <IconBrandGoogle className="h-4 w-4 text-neutral-800 dark:text-neutral-300" />
               <span className="text-sm text-neutral-700 dark:text-neutral-300  cursor-pointer  ">
                 Continue with Google
-              </span>
-              <BottomGradient />
-            </button>
-
-            <button
-              className="group/btn shadow-input relative flex h-10 w-full items-center 
-                         justify-center space-x-2 rounded-md bg-[oklch(0.87_0_0)] px-4 font-medium 
-                         text-black dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_#262626] border border-[oklch(0.554_0.046_257.417)]"
-              type="button"
-            >
-              <IconBrandGithub className="h-4 w-4 text-neutral-800 dark:text-neutral-300" />
-              <span className="text-sm text-neutral-700 dark:text-neutral-300 cursor-pointer">
-                Continue with GitHub
               </span>
               <BottomGradient />
             </button>

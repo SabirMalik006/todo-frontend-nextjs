@@ -1,5 +1,4 @@
 "use client";
-
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -12,22 +11,15 @@ const AuthRoute = ({ children, reverse = false }) => {
     const refresh = localStorage.getItem("refreshToken");
 
     if (reverse) {
-      
-      if (token || refresh) {
-        router.replace("/");
-      }
+      if (token || refresh) router.replace("/dashboard");
     } else {
-      
-      if (!token && !refresh) {
-        router.replace("/login");
-      }
+      if (!token && !refresh) router.replace("/login");
     }
 
     setLoading(false);
   }, [router, reverse]);
 
   if (loading) return null;
-
   return children;
 };
 

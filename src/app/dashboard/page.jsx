@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "../utils/api";
 import AuthRoute from "../components/AuthRoute";
-import { FaTrash, FaEdit, FaPlus } from "react-icons/fa";
+import { FaTrash, FaEdit, FaPlus, FaArrowRight } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import Navbar from "../components/Navbar";
 
@@ -49,7 +49,8 @@ export default function Dashboard() {
     }
   };
 
-  const handleDeleteBoard = async (id) => {
+  const handleDeleteBoard = async (id, e) => {
+    e.stopPropagation();
     try {
       await api.delete(`/board/${id}`);
       setBoards(boards.filter((b) => b._id !== id));
@@ -93,7 +94,7 @@ export default function Dashboard() {
   return (
     <AuthRoute>
       <Navbar/>
-      <div className="min-h-screen bg-slate-100 flex flex-col items-center py-12 px-6 mt-10">
+      <div className="min-h-screen bg-slate-100 flex flex-col items-center py-12 px-6">
         <div className="flex justify-between w-full max-w-5xl mb-10">
           <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight">
             My Boards
@@ -117,55 +118,51 @@ export default function Dashboard() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-5xl">
-            {/* ✅ Default Template Board */}
-            <div
-              onClick={() => openBoard("template")}
-              className="cursor-pointer bg-gradient-to-br from-slate-700 to-slate-900 text-white p-8 rounded-2xl 
-                         shadow-md hover:shadow-xl transition group"
-            >
-              <h2 className="text-xl font-semibold group-hover:underline">
-                Template Board
-              </h2>
-              <p className="text-sm opacity-80 mt-2">
-                A ready-to-use board with sample columns & tasks.
-              </p>
-            </div>
-
-            {/* ✅ Dynamic Boards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 w-full max-w-5xl">
             {boards.map((board) => (
               <div
                 key={board._id}
-                onClick={() => openBoard(board._id)}
-                className="bg-white p-8 rounded-2xl shadow-md relative
-                           hover:shadow-lg transition border border-slate-200"
+                className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 
+                         border border-slate-200 hover:border-slate-300 group"
               >
-                <h2
-                  
-                  className="text-lg font-semibold text-slate-800 cursor-pointer hover:text-slate-600"
-                >
-                  {board.title}
-                </h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  {board.description || "No description"}
-                </p>
-                <div className="absolute top-3 right-3 flex gap-3">
-                  <button
-                    onClick={() => {
-                      setEditBoard(board);
-                      setEditModalOpen(true);
-                    }}
-                    className="text-slate-400 hover:text-blue-600"
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteBoard(board._id)}
-                    className="text-slate-400 hover:text-red-600"
-                  >
-                    <FaTrash />
-                  </button>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <h2 className="text-xl font-semibold text-slate-800 line-clamp-1">
+                      {board.title}
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-2 line-clamp-2">
+                      {board.description || "No description provided"}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 ml-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditBoard(board);
+                        setEditModalOpen(true);
+                      }}
+                      className="text-slate-400 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-blue-50"
+                    >
+                      <FaEdit size={14} />
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteBoard(board._id, e)}
+                      className="text-slate-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
+                    >
+                      <FaTrash size={14} />
+                    </button>
+                  </div>
                 </div>
+                
+                <button
+                  onClick={() => openBoard(board._id)}
+                  className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-800 
+                           text-slate-700 py-2 px-4 rounded-lg font-medium transition-all duration-300 
+                           group-hover:bg-slate-800 group-hover:text-white mt-4"
+                >
+                  Open Board
+                  <FaArrowRight size={12} />
+                </button>
               </div>
             ))}
           </div>

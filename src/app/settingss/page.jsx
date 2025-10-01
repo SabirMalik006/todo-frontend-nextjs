@@ -21,7 +21,7 @@ export default function Settings() {
   const { id: routeBoardId } = useParams();
   const [boardId, setBoardId] = useState(null);
 
-  // ✅ Get boardId from route or localStorage
+  
   useEffect(() => {
     if (routeBoardId) {
       setBoardId(routeBoardId);
