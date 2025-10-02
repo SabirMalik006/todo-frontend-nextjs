@@ -17,6 +17,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^17.2.2",
     "framer-motion": "^12.23.18",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.544.0",
     "motion": "^12.23.18",
     "next": "15.5.2",

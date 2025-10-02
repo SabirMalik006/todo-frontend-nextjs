@@ -186,7 +186,7 @@ export default function TeamSidebar({ boardId }) {
           </div>
 
 
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <input
               readOnly
               value={inviteLink}
@@ -201,7 +201,7 @@ export default function TeamSidebar({ boardId }) {
             >
               📋
             </button>
-          </div>
+          </div> */}
         </div>
 
 

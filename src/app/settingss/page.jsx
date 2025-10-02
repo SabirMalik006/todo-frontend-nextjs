@@ -126,7 +126,7 @@ export default function Settings() {
   return (
     <>
 
-      <div className="min-h-screen w-full bg-gradient-to-r from-[#4e85dd] to-[#373B44]">
+      <div className="min-h-screen w-full bg-[oklch(96.7%_0.003_264.542)]">
         <Navbar className="fixed top-0 left-0 w-full z-100" />
 
 
@@ -142,7 +142,7 @@ export default function Settings() {
 
 
         <main className="flex flex-col items-center justify-center min-h-[68vh] px-8">
-          <div className="w-full max-w-lg bg-[#cce1f3] rounded-2xl shadow-2xl px-10 py-6 mb-4">
+          <div className="w-full max-w-lg bg-white   rounded-2xl shadow-2xl px-10 py-6 mb-4">
 
             <div className="flex flex-col items-center">
               <label className="mt-3 block text-gray-800 font-semibold text-3xl mb-2">
