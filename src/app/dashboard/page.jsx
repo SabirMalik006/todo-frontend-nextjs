@@ -168,7 +168,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ✅ Create Modal with Rename-style UI */}
+
         {modalOpen && (
           <div
             className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50"
@@ -220,7 +220,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ✅ Edit Modal with Rename-style UI */}
+
         {editModalOpen && editBoard && (
           <div
             className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50"
