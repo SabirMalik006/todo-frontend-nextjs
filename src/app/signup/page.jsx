@@ -17,7 +17,6 @@ export default function SignupPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
@@ -34,9 +33,9 @@ export default function SignupPage() {
     }
   };
 
-
   const handleGoogleLogin = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+    const baseApi = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+    window.location.href = `${baseApi}/auth/google`;
   };
 
   return (
@@ -105,10 +104,11 @@ export default function SignupPage() {
 
           <div className="flex w-full items-center justify-center">
             <div className="flex-grow border-t border-[oklch(0.708_0_0)]"></div>
-            <span className="mx-4 text-center text-md font-medium text-gray-500">OR</span>
+            <span className="mx-4 text-center text-md font-medium text-gray-500">
+              OR
+            </span>
             <div className="flex-grow border-t border-[oklch(0.708_0_0)]"></div>
           </div>
-
 
           {/* Social Logins */}
           <div className="flex flex-col space-y-3 my-7">
@@ -138,8 +138,6 @@ export default function SignupPage() {
     </AuthRoute>
   );
 }
-
-
 
 const LabelInputContainer = ({ children, className }) => {
   return (
