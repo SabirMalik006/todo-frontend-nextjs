@@ -137,19 +137,30 @@ export default function TodoPage() {
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) || [],
       }));
 
-      // ✅ Keep your dummy todo logic
       const allTodos = withTodos.flatMap((c) => c.todos || []);
-      if (allTodos.length === 0 && withTodos.length >= 3) {
-        withTodos[0].todos.push({
-          _id: "dummy-1",
+
+      const alreadyHasWelcome = todos.some(
+        (t) => t.title === "Welcome!" && t.board === boardId
+      );
+
+      if (!alreadyHasWelcome && withTodos.length >= 3) {
+        const defaultTodo = {
           title: "Welcome!",
           description:
             "This is your first todo. Edit or delete it to get started.",
           priority: "medium",
           column: withTodos[0]._id,
           order: 1,
-          isDummy: true,
-        });
+          board: boardId,
+        };
+
+        try {
+          const headers = getAuthHeaders();
+          const res = await api.post("/todo", defaultTodo, headers);
+          withTodos[0].todos.push(res.data);
+        } catch (err) {
+          console.error("Failed to create default todo:", err);
+        }
       }
 
       const savedDummy = JSON.parse(localStorage.getItem("dummyOrder"));
@@ -532,28 +543,183 @@ export default function TodoPage() {
         }
       }
     }
+    const onDragEnd = async (result) => {
+      setIsDragging(false);
+      cleanupScrolling();
+
+      if (boardRef.current) {
+        boardRef.current.style.backgroundColor = "transparent";
+      }
+
+      const { source, destination, draggableId, type } = result;
+      if (!destination) return;
+
+      if (type === "COLUMN") {
+        if (source.index === destination.index) return;
+        const newColumns = [...columns];
+        const [movedCol] = newColumns.splice(source.index, 1);
+        newColumns.splice(destination.index, 0, movedCol);
+        setColumns(newColumns);
+
+        try {
+          const headers = getAuthHeaders();
+          await api.put(
+            "/column/update-order",
+            {
+              columnId: movedCol._id,
+              newIndex: destination.index,
+            },
+            headers
+          );
+          toast.success(`Column moved to position ${destination.index + 1}`, {
+            duration: 2000,
+          });
+        } catch (err) {
+          console.error(
+            "Column reorder error:",
+            err.response?.data || err.message
+          );
+          toast.error("Failed to reorder columns, refreshing...");
+          fetchColumns();
+        }
+        return;
+      }
+
+      const srcColId = source.droppableId;
+      const dstColId = destination.droppableId;
+      if (srcColId === dstColId && source.index === destination.index) return;
+
+      const newColumns = columns.map((c) => ({
+        ...c,
+        todos: [...(c.todos || [])],
+      }));
+      const sourceCol = newColumns.find(
+        (c) => String(c._id) === String(srcColId)
+      );
+      const destCol = newColumns.find(
+        (c) => String(c._id) === String(dstColId)
+      );
+      if (!sourceCol || !destCol) return;
+
+      const [moved] = sourceCol.todos.splice(source.index, 1);
+      moved.column = dstColId;
+      destCol.todos.splice(destination.index, 0, moved);
+
+      sourceCol.todos.forEach((t, i) => (t.order = i + 1));
+      destCol.todos.forEach((t, i) => (t.order = i + 1));
+
+      setColumns(newColumns);
+
+      if (boardRef.current) {
+        const columnElements = boardRef.current.querySelectorAll(".column");
+        const destColumnElement = Array.from(columnElements).find(
+          (el) => el.getAttribute("data-column-id") === dstColId
+        );
+        if (destColumnElement) {
+          destColumnElement.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+            inline: "center",
+          });
+        }
+      }
+
+      toast.success(`${moved.title} moved to ${destCol.name}`, {
+        duration: 2000,
+      });
+
+      if (moved.isDummy) {
+        const dummyPayload = {
+          _id: moved._id,
+          column: moved.column,
+          order: moved.order,
+          board: boardId,
+        };
+        localStorage.setItem("dummyOrder", JSON.stringify(dummyPayload));
+        return;
+      }
+
+      try {
+        const headers = getAuthHeaders();
+        await api.put(
+          `/todo/${draggableId}`,
+          { column: moved.column },
+          headers
+        );
+
+        const orderData = newColumns.flatMap((col) =>
+          (col.todos || [])
+            .filter((t) => !t.isDummy)
+            .map((t) => ({
+              id: t._id,
+              order: t.order ?? 0,
+              column: col._id,
+              board: boardId,
+            }))
+        );
+
+        if (orderData.length > 0) {
+          await api.put("/todo/update-order", { orderData }, headers);
+        }
+      } catch (err) {
+        console.error("onDragEnd error:", err.response?.data || err.message);
+        toast.error("Failed to save changes, refreshing...");
+        fetchTodos();
+      }
+    };
   }, []);
 
   const onDragEnd = async (result) => {
     setIsDragging(false);
-
     cleanupScrolling();
 
     if (boardRef.current) {
-      boardRef.current.style.backgroundColor = "";
+      boardRef.current.style.backgroundColor = "transparent";
     }
 
-    const { source, destination, draggableId } = result;
+    const { source, destination, draggableId, type } = result;
     if (!destination) return;
-
-    const srcColId = source.droppableId;
-    const dstColId = destination.droppableId;
-    if (srcColId === dstColId && source.index === destination.index) return;
 
     const newColumns = columns.map((c) => ({
       ...c,
       todos: [...(c.todos || [])],
     }));
+
+    const headers = getAuthHeaders();
+
+    if (type === "COLUMN") {
+      const [movedColumn] = newColumns.splice(source.index, 1);
+      newColumns.splice(destination.index, 0, movedColumn);
+      newColumns.forEach((c, i) => (c.order = i + 1));
+      setColumns(newColumns);
+
+      try {
+        const columnOrderData = newColumns.map((c) => ({
+          id: c._id,
+          order: c.order,
+          board: boardId,
+        }));
+        if (columnOrderData.length > 0) {
+          await api.put(
+            "/column/update-order",
+            { orderData: columnOrderData },
+            headers
+          );
+        }
+      } catch (err) {
+        console.error(
+          "Column drag error:",
+          err?.response?.data || err?.message || err
+        );
+        toast.error("Failed to save column order, refreshing...");
+        fetchTodos();
+      }
+      return;
+    }
+
+    const srcColId = source.droppableId;
+    const dstColId = destination.droppableId;
+    if (srcColId === dstColId && source.index === destination.index) return;
 
     const sourceCol = newColumns.find(
       (c) => String(c._id) === String(srcColId)
@@ -601,8 +767,6 @@ export default function TodoPage() {
     }
 
     try {
-      const headers = getAuthHeaders();
-
       await api.put(`/todo/${draggableId}`, { column: moved.column }, headers);
 
       const orderData = newColumns.flatMap((col) =>
@@ -682,8 +846,8 @@ export default function TodoPage() {
       <Navbar />
       <Teamsidebar boardId={boardId} board={board} />
       {/* <InviteMember boardId={boardId} /> */}
-      <h1 className="w-full bg-[oklch(96.7%_0.003_264.542)] text-gray-800 text-2xl font-semibold border-b border-gray-200 shadow-sm px-8 py-4 rounded-t-lg">
-        Board : <span className="text-[#2B1887]">{board?.title}</span>
+      <h1 className="w-full bg-[oklch(96.7%_0.003_264.542)] text-gray-800 text-2xl font-semibold border-b truncate border-gray-200 shadow-sm px-8 py-4 rounded-t-lg">
+        Board : <span className="text-[#2B1887] ">{board?.title}</span>
       </h1>
       <div className="h-full w-full bg-[oklch(96.7%_0.003_264.542)] todo pt-15">
         <div className="flex justify-end px-10 mb-4">
@@ -698,7 +862,7 @@ export default function TodoPage() {
           onDragStart={(start) => {
             setIsDragging(true);
             if (boardRef.current) {
-              boardRef.current.style.backgroundColor = "#f9f9ff";
+              boardRef.current.style.backgroundColor = "";
 
               const columnElements =
                 boardRef.current.querySelectorAll(".column");
@@ -712,239 +876,273 @@ export default function TodoPage() {
           onDragUpdate={onDragUpdate}
           onDragEnd={onDragEnd}
         >
-          <div
-            ref={boardContainerRef}
-            onMouseDown={handleBoardMouseDown}
-            className="w-full h-[calc(100vh-50px)] select-none cursor-grab active:cursor-grabbing"
+          <Droppable
+            droppableId="board-scroll"
+            direction="horizontal"
+            type="COLUMN"
           >
-            <Droppable
-              droppableId="board-scroll"
-              direction="horizontal"
-              isDropDisabled={true}
-              type="TASK"
-            >
-              {(boardProvided) => (
-                <div
-                  ref={(node) => {
-                    boardRef.current = node;
-                    boardProvided.innerRef(node);
-                  }}
-                  {...boardProvided.droppableProps}
-                  className="flex gap-6 bg-[oklch(96.7%_0.003_264.542)] px-6 lg:px-10 py-4 items-start overflow-x-auto h-full"
-                >
-                  {columns.map((col) => (
-                    <Droppable
-                      key={col._id}
-                      droppableId={String(col._id)}
-                      type="TASK"
-                      ignoreContainerClipping={true}
-                    >
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          data-column-id={String(col._id)}
-                          className="column bg-white py-5 px-4 rounded-lg flex flex-col min-w-[320px] max-w-[820px] w-full min-h-[180px] max-h-[calc(100vh-160px)] overflow-y-auto border border-gray-200 shadow-sm"
-                        >
-                          {/* Column Header */}
-                          <div className="flex justify-between items-center mb-4">
-                            <h3
-                              className={`font-semibold text-[#2B1887] flex items-center gap-2 max-w-full overflow-hidden ${
-                                columns.length > 6
-                                  ? "text-sm sm:text-base"
-                                  : columns.length > 4
-                                  ? "text-lg sm:text-xl"
-                                  : "text-xl sm:text-2xl"
-                              }`}
+            {(boardProvided) => (
+              <div
+                ref={(node) => {
+                  boardRef.current = node;
+                  boardProvided.innerRef(node);
+                }}
+                {...boardProvided.droppableProps}
+                className="flex gap-6 bg-[oklch(96.7%_0.003_264.542)] px-6 lg:px-10 py-4 items-start overflow-x-auto h-full cursor-grab active:cursor-grabbing"
+                onMouseDown={(e) => {
+                  const container = e.currentTarget;
+                  container.isDown = true;
+                  container.startX = e.pageX - container.offsetLeft;
+                  container.scrollLeftStart = container.scrollLeft;
+                }}
+                onMouseLeave={(e) => {
+                  const container = e.currentTarget;
+                  container.isDown = false;
+                }}
+                onMouseUp={(e) => {
+                  const container = e.currentTarget;
+                  container.isDown = false;
+                }}
+                onMouseMove={(e) => {
+                  const container = e.currentTarget;
+                  if (!container.isDown) return;
+                  e.preventDefault();
+                  const x = e.pageX - container.offsetLeft;
+                  const walk = (x - container.startX) * 1; // adjust scroll speed
+                  container.scrollLeft = container.scrollLeftStart - walk;
+                }}
+              >
+                {columns.map((col, colIndex) => (
+                  <Draggable
+                    key={col._id}
+                    draggableId={String(col._id)}
+                    index={colIndex}
+                  >
+                    {(providedCol) => (
+                      <div
+                        ref={providedCol.innerRef}
+                        {...providedCol.draggableProps}
+                        {...providedCol.dragHandleProps}
+                        className="column bg-white py-5 px-4 rounded-lg flex flex-col min-w-[320px] max-w-[820px] w-full min-h-[180px] max-h-[calc(100vh-160px)] overflow-y-auto border border-gray-200 shadow-sm"
+                        data-column-id={String(col._id)}
+                      >
+                        <div className="flex justify-between items-center mb-4">
+                          <h3
+                            className={`font-semibold text-[#2B1887] flex items-center gap-2 max-w-full overflow-hidden ${
+                              columns.length > 6
+                                ? "text-sm sm:text-base"
+                                : columns.length > 4
+                                ? "text-lg sm:text-xl"
+                                : "text-xl sm:text-2xl"
+                            }`}
+                          >
+                            <span className="truncate block max-w-[180px] sm:max-w-[200px] md:max-w-[250px]">
+                              {col.name}
+                            </span>
+                            <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full shrink-0">
+                              {col.todos?.length || 0}
+                            </span>
+                          </h3>
+
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenu(
+                                  activeMenu === col._id ? null : col._id
+                                );
+                              }}
+                              className="p-2 rounded-full duration-300 hover:bg-purple-100"
                             >
-                              <span className="truncate block max-w-[180px] sm:max-w-[200px] md:max-w-[250px]">
-                                {col.name}
-                              </span>
+                              <TbDotsVertical className="w-5 h-5 text-[#2B1887] cursor-pointer" />
+                            </button>
 
-                              <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full shrink-0">
-                                {col.todos?.length || 0}
-                              </span>
-                            </h3>
-
-                            {/* Column Menu */}
-                            <div className="relative">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveMenu(
-                                    activeMenu === col._id ? null : col._id
-                                  );
-                                }}
-                                className="p-2 rounded-full duration-300 hover:bg-purple-100"
-                              >
-                                <TbDotsVertical className="w-5 h-5 text-[#2B1887]" />
-                              </button>
-
-                              {activeMenu === col._id && (
-                                <div className="absolute right-7 top-6 w-40 bg-white rounded-lg shadow-lg z-20">
-                                  <ul className="flex flex-col text-sm rounded-lg overflow-hidden shadow-md border border-gray-200 bg-white">
-                                    <li
-                                      className="px-4 py-2 text-gray-700 hover:bg-green-100 hover:text-green-700 cursor-pointer flex items-center gap-2"
-                                      onClick={() => {
-                                        setActiveMenu(null);
-                                        openAddTodoForColumn(col._id);
-                                      }}
-                                    >
-                                      <FaPlus size={12} /> Add Todo
-                                    </li>
-                                    <li
-                                      className="px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-700 cursor-pointer flex items-center gap-2"
-                                      onClick={() => {
-                                        setActiveMenu(null);
-                                        renameColumn(col._id);
-                                      }}
-                                    >
-                                      <FaEdit size={12} /> Rename
-                                    </li>
-                                    <li
-                                      className="px-4 py-2 text-gray-700 hover:bg-red-100 hover:text-red-700 cursor-pointer flex items-center gap-2"
-                                      onClick={() => {
-                                        setActiveMenu(null);
-                                        deleteColumn(col._id);
-                                      }}
-                                    >
-                                      <FaTrash size={12} /> Delete Column
-                                    </li>
-                                  </ul>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Todos List */}
-                          <div className="flex flex-col gap-3">
-                            {col.todos && col.todos.length > 0 ? (
-                              col.todos.map((todo, index) => (
-                                <Draggable
-                                  key={String(todo._id)}
-                                  draggableId={String(todo._id)}
-                                  index={index}
-                                >
-                                  {(provided, snapshot) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      onClick={(e) => {
-                                        if (
-                                          e.target.closest(
-                                            ".delete-btn, .edit-btn"
-                                          )
-                                        )
-                                          return;
-                                        if (isDragging) return;
-                                        openViewModal(todo);
-                                      }}
-                                      style={{
-                                        ...provided.draggableProps.style,
-                                        zIndex: snapshot.isDragging
-                                          ? 9999
-                                          : "auto",
-                                        opacity: snapshot.isDragging ? 0.9 : 1,
-                                        boxShadow: snapshot.isDragging
-                                          ? "0 5px 10px rgba(0,0,0,0.2)"
-                                          : "none",
-                                      }}
-                                      className="todo-item relative bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden"
-                                    >
-                                      {/* Top Row: Priority + Delete */}
-                                      <div className="flex justify-between items-center mb-2">
-                                        <h3 className="text-sm sm:text-xl font-semibold text-gray-800 leading-snug mb-1 truncate">
-                                          {todo.title}
-                                        </h3>
-
-                                        <MdDeleteOutline
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            deleteTodo(todo._id, todo.isDummy);
-                                          }}
-                                          className="text-red-500 w-5 h-5 cursor-pointer hover:scale-110 duration-200 delete-btn"
-                                        />
-                                      </div>
-
-                                      <p
-                                        className="text-xs sm:text-lg text-gray-500 mb-3 line-clamp-2"
-                                        title={todo.description}
-                                      >
-                                        {todo.description ||
-                                          "No description available"}
-                                      </p>
-
-                                      {/* Date Section */}
-                                      <div className="flex justify-between items-center text-gray-400 text-xs mb-2 border-b border-b-gray-200 pb-2">
-                                        <span className="flex items-center gap-1 text-sm sm:text-lg ">
-                                          {todo.day
-                                            ? new Date(
-                                                todo.day
-                                              ).toLocaleDateString("en-GB", {
-                                                day: "2-digit",
-                                                month: "short",
-                                                year: "numeric",
-                                              })
-                                            : "No Date"}
-                                        </span>
-                                        <span
-                                          className={`text-[11px] font-medium px-2 py-0.5 sm:px-6 sm:py-2 rounded-full capitalize ${
-                                            todo.priority === "high"
-                                              ? "bg-red-100 text-red-600"
-                                              : todo.priority === "medium"
-                                              ? "bg-yellow-100 text-yellow-700"
-                                              : "bg-green-100 text-green-700"
-                                          }`}
-                                        >
-                                          {todo.priority || "low"}
-                                        </span>
-                                      </div>
-
-                                      <div className="flex justify-start items-center gap-4 text-xs text-gray-500">
-                                        <span className="flex items-center gap-1">
-                                          <BiCommentDetail className="text-gray-400 w-4 h-4" />
-                                          {todo.comments?.length || 0}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  )}
-                                </Draggable>
-                              ))
-                            ) : (
-                              <p className="text-gray-500 text-center pt-5 text-sm sm:text-xl">
-                                No todos here
-                              </p>
+                            {activeMenu === col._id && (
+                              <div className="absolute right-7 top-6 w-40 bg-white rounded-lg shadow-lg z-20">
+                                <ul className="flex flex-col text-sm rounded-lg overflow-hidden shadow-md border border-gray-200 bg-white">
+                                  <li
+                                    className="px-4 py-2 text-gray-700 hover:bg-green-100 hover:text-green-700 cursor-pointer flex items-center gap-2"
+                                    onClick={() => {
+                                      setActiveMenu(null);
+                                      openAddTodoForColumn(col._id);
+                                    }}
+                                  >
+                                    <FaPlus size={12} /> Add Todo
+                                  </li>
+                                  <li
+                                    className="px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-700 cursor-pointer flex items-center gap-2"
+                                    onClick={() => {
+                                      setActiveMenu(null);
+                                      renameColumn(col._id);
+                                    }}
+                                  >
+                                    <FaEdit size={12} /> Rename
+                                  </li>
+                                  <li
+                                    className="px-4 py-2 text-gray-700 hover:bg-red-100 hover:text-red-700 cursor-pointer flex items-center gap-2"
+                                    onClick={() => {
+                                      setActiveMenu(null);
+                                      deleteColumn(col._id);
+                                    }}
+                                  >
+                                    <FaTrash size={12} /> Delete Column
+                                  </li>
+                                </ul>
+                              </div>
                             )}
-                            {provided.placeholder}
                           </div>
                         </div>
-                      )}
-                    </Droppable>
-                  ))}
-                  {boardProvided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </div>
+
+                        <Droppable
+                          droppableId={String(col._id)}
+                          type="TASK"
+                          ignoreContainerClipping={true}
+                        >
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.droppableProps}
+                              className="flex flex-col gap-3"
+                            >
+                              {col.todos && col.todos.length > 0 ? (
+                                col.todos.map((todo, index) => (
+                                  <Draggable
+                                    key={String(todo._id)}
+                                    draggableId={String(todo._id)}
+                                    index={index}
+                                  >
+                                    {(provided, snapshot) => (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        onClick={(e) => {
+                                          if (
+                                            e.target.closest(
+                                              ".delete-btn, .edit-btn"
+                                            )
+                                          )
+                                            return;
+                                          if (isDragging) return;
+                                          openViewModal(todo);
+                                        }}
+                                        style={{
+                                          ...provided.draggableProps.style,
+                                          zIndex: snapshot.isDragging
+                                            ? 9999
+                                            : "auto",
+                                          opacity: snapshot.isDragging
+                                            ? 0.9
+                                            : 1,
+                                          boxShadow: snapshot.isDragging
+                                            ? "0 5px 10px rgba(0,0,0,0.2)"
+                                            : "none",
+                                        }}
+                                        className="todo-item relative bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden"
+                                      >
+                                        <div className="flex justify-between items-center mb-2">
+                                          <h3 className="text-sm sm:text-xl font-semibold text-gray-800 leading-snug mb-1 truncate">
+                                            {todo.title}
+                                          </h3>
+                                          <MdDeleteOutline
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              deleteTodo(
+                                                todo._id,
+                                                todo.isDummy
+                                              );
+                                            }}
+                                            className="text-red-500 w-5 h-5 cursor-pointer hover:scale-110 duration-200 delete-btn"
+                                          />
+                                        </div>
+
+                                        <p
+                                          className="text-xs sm:text-lg text-gray-500 mb-3 line-clamp-2"
+                                          title={todo.description}
+                                        >
+                                          {todo.description ||
+                                            "No description available"}
+                                        </p>
+
+                                        <div className="flex justify-between items-center text-gray-400 text-xs mb-2 border-b border-b-gray-200 pb-2">
+                                          <span className="flex items-center gap-1 text-sm sm:text-lg">
+                                            {todo.day
+                                              ? new Date(
+                                                  todo.day
+                                                ).toLocaleDateString("en-GB", {
+                                                  day: "2-digit",
+                                                  month: "short",
+                                                  year: "numeric",
+                                                })
+                                              : "No Date"}
+                                          </span>
+                                          <span
+                                            className={`text-[11px] font-medium px-2 py-0.5 sm:px-6 sm:py-2 rounded-full capitalize ${
+                                              todo.priority === "high"
+                                                ? "bg-red-100 text-red-600"
+                                                : todo.priority === "medium"
+                                                ? "bg-yellow-100 text-yellow-700"
+                                                : "bg-green-100 text-green-700"
+                                            }`}
+                                          >
+                                            {todo.priority || "low"}
+                                          </span>
+                                        </div>
+
+                                        <div className="flex justify-start items-center gap-4 text-xs text-gray-500">
+                                          <span className="flex items-center gap-1">
+                                            <BiCommentDetail className="text-gray-400 w-4 h-4" />
+                                            {todo.comments?.length || 0}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </Draggable>
+                                ))
+                              ) : (
+                                <p className="text-gray-500 text-center pt-5 text-sm sm:text-xl">
+                                  No todos here
+                                </p>
+                              )}
+                              {provided.placeholder}
+                            </div>
+                          )}
+                        </Droppable>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {boardProvided.placeholder}
+              </div>
+            )}
+          </Droppable>
         </DragDropContext>
       </div>
 
       {/* Todo Modal */}
       {isModalOpen && (
         <div
-          onClick={() => {
-            setIsModalOpen(false);
-            setEditingTodo(null);
-            setTitle("");
-            setDescription("");
-            setActiveColumnForNewTodo(null);
+          onMouseDown={(e) => {
+            const modal = e.currentTarget.querySelector(".modal-content");
+            if (!modal.contains(e.target)) {
+              const handleMouseUp = (upEvent) => {
+                if (!modal.contains(upEvent.target)) {
+                  setIsModalOpen(false);
+                  setEditingTodo(null);
+                  setTitle("");
+                  setDescription("");
+                  setActiveColumnForNewTodo(null);
+                }
+                document.removeEventListener("mouseup", handleMouseUp);
+              };
+              document.addEventListener("mouseup", handleMouseUp);
+            }
           }}
           className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50"
         >
           <div
+            className="modal-content bg-white p-6 rounded-2xl shadow-lg w-[400px]"
             onClick={(e) => e.stopPropagation()}
-            className="bg-white p-6 rounded-2xl shadow-lg w-[400px]"
           >
             <h2 className="text-2xl font-bold text-[#2B1887] mb-4 text-center">
               {editingTodo ? "Update Todo" : "Add New Todo"}
@@ -956,14 +1154,14 @@ export default function TodoPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter todo title"
-              className="border px-3 py-2 rounded-lg w-full mb-4"
+              className="border border-slate-400 px-3 py-2 rounded-lg w-full mb-4"
             />
 
             <label className="block text-gray-700 mb-1">Select Priority</label>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
-              className="border px-3 py-2 rounded-lg w-full mb-4  "
+              className="border border-slate-400 px-3 py-2 rounded-lg w-full mb-4"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
@@ -978,7 +1176,7 @@ export default function TodoPage() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter todo description"
               rows="4"
-              className="border px-3 py-2 rounded-lg w-full mb-4 resize-none"
+              className="border border-slate-400 px-3 py-2 rounded-lg w-full mb-4 resize-none"
             ></textarea>
 
             <div className="flex justify-end gap-3">
@@ -1008,14 +1206,19 @@ export default function TodoPage() {
 
       {isViewModalOpen && selectedTodo && (
         <div
-          onClick={() => {
-            setIsViewModalOpen(false);
-            setSelectedTodo(null);
+          onMouseDown={(e) => (e.currentTarget.dataset.down = "true")}
+          onMouseUp={(e) => {
+            if (e.currentTarget.dataset.down === "true") {
+              setIsViewModalOpen(false);
+              setSelectedTodo(null);
+            }
+            delete e.currentTarget.dataset.down;
           }}
           className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-50"
         >
           <div
-            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onMouseUp={(e) => e.stopPropagation()}
             className="bg-white p-8 rounded-2xl shadow-2xl w-[450px] relative"
           >
             <button
@@ -1048,10 +1251,10 @@ export default function TodoPage() {
                 <span
                   className={`px-4 py-1 rounded-lg text-white text-sm font-medium ${
                     selectedTodo.priority === "high"
-                    ? "bg-red-100 text-red-600"
-                    : selectedTodo.priority === "medium"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-green-100 text-green-700"
+                      ? "bg-red-300 text-red-800"
+                      : selectedTodo.priority === "medium"
+                      ? "bg-yellow-300 text-yellow-800"
+                      : "bg-green-300 text-green-800"
                   }`}
                 >
                   {selectedTodo.priority}
@@ -1186,14 +1389,19 @@ export default function TodoPage() {
       {isColumnModalOpen && (
         <div
           className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50"
-          onClick={() => {
-            setIsColumnModalOpen(false);
-            setNewColumnName("");
+          onMouseDown={(e) => (e.currentTarget.dataset.down = "true")}
+          onMouseUp={(e) => {
+            if (e.currentTarget.dataset.down === "true") {
+              setIsColumnModalOpen(false);
+              setNewColumnName("");
+            }
+            delete e.currentTarget.dataset.down;
           }}
         >
           <div
             className="bg-white p-6 rounded-2xl shadow-lg w-[400px]"
-            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onMouseUp={(e) => e.stopPropagation()}
           >
             <h2 className="text-2xl font-bold text-[#2B1887] mb-4">
               Add New Column

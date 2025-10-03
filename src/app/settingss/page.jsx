@@ -242,7 +242,7 @@ export default function Settings() {
                 type="button"
                 onClick={handleSave}
                 disabled={loading}
-                className={`w-full bg-[#2B1887] text-white py-2 rounded-lg cursor-pointer font-semibold transition duration-300 ${loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-80"
+                className={`w-full bg-[#2B1887] text-white py-2 rounded-lg cursor-pointer font-semibold transition duration-300 ${loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-80 mb-4"
                   }`}
               >
                 {loading ? "Saving..." : "Save All Changes"}

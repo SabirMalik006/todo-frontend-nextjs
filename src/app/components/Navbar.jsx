@@ -59,7 +59,7 @@ export default function Navbar() {
       </h1>
 
 
-      <h1 className="text-slate-700 text-base sm:text-xl md:text-2xl font-semibold text-center">
+      <h1 className="text-slate-700 text-base  sm:text-xl md:text-2xl font-semibold text-center">
         Todo Kanban
       </h1>
 
