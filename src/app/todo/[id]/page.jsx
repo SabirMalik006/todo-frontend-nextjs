@@ -137,10 +137,10 @@ export default function TodoPage() {
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) || [],
       }));
 
-      // ✅ localStorage flag to track if dummy already created once
+      
       const hasDummyCreated = localStorage.getItem(`dummy_created_${boardId}`);
 
-      // ✅ Only create Welcome todo if board is new (never had one before)
+      
       if (!hasDummyCreated && withTodos.length >= 3) {
         const defaultTodo = {
           title: "Welcome!",

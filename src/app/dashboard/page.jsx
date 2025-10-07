@@ -102,7 +102,7 @@ export default function Dashboard() {
           <button
             onClick={() => setModalOpen(true)}
             className="flex items-center justify-center gap-2 bg-slate-800 text-white px-5 sm:px-6 py-3 rounded-lg font-medium
-                 hover:bg-slate-900 transition shadow-sm w-full sm:w-auto"
+                 hover:bg-slate-900 transition shadow-sm w-full sm:w-auto cursor-pointer"
           >
             <FaPlus /> Create Board
           </button>

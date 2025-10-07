@@ -71,7 +71,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="!focus:outline-none bg-transparent border ring-offset-0 ring-0 border-[oklch(0.554_0.046_257.417)] rounded-md"
+                  className="!focus:outline-none bg-transparent border ring-offset-0 ring-0  border-[oklch(0.554_0.046_257.417)] rounded-md"
                 />
               </LabelInputContainer>
 
@@ -109,7 +109,7 @@ export default function LoginPage() {
                 onClick={handleGoogleLogin}
                 className="group/btn shadow-input relative flex h-10 w-full items-center 
                          justify-center space-x-2 rounded-md  px-4 font-medium 
-                         text-black dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_#262626] border border-[oklch(0.554_0.046_257.417)]"
+                         text-black dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_#262626] border border-[oklch(0.554_0.046_257.417)] cursor-pointer"
                 type="button"
               >
                 <IconBrandGoogle className="h-4 w-4 text-neutral-800 dark:text-neutral-300" />
