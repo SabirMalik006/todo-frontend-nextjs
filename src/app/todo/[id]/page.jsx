@@ -137,13 +137,11 @@ export default function TodoPage() {
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) || [],
       }));
 
-      const allTodos = withTodos.flatMap((c) => c.todos || []);
+      // ✅ localStorage flag to track if dummy already created once
+      const hasDummyCreated = localStorage.getItem(`dummy_created_${boardId}`);
 
-      const alreadyHasWelcome = todos.some(
-        (t) => t.title === "Welcome!" && t.board === boardId
-      );
-
-      if (!alreadyHasWelcome && withTodos.length >= 3) {
+      // ✅ Only create Welcome todo if board is new (never had one before)
+      if (!hasDummyCreated && withTodos.length >= 3) {
         const defaultTodo = {
           title: "Welcome!",
           description:
@@ -155,14 +153,17 @@ export default function TodoPage() {
         };
 
         try {
-          const headers = getAuthHeaders();
           const res = await api.post("/todo", defaultTodo, headers);
           withTodos[0].todos.push(res.data);
+
+          // 🔒 Mark dummy as created so it won't reappear after delete
+          localStorage.setItem(`dummy_created_${boardId}`, "true");
         } catch (err) {
           console.error("Failed to create default todo:", err);
         }
       }
 
+      // 🧠 Maintain dummy order if saved
       const savedDummy = JSON.parse(localStorage.getItem("dummyOrder"));
       if (savedDummy && savedDummy._id && withTodos.length > 0) {
         withTodos = withTodos.map((col) => {
@@ -1214,19 +1215,19 @@ export default function TodoPage() {
             }
             delete e.currentTarget.dataset.down;
           }}
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-50"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-50 p-4 sm:p-6"
         >
           <div
             onMouseDown={(e) => e.stopPropagation()}
             onMouseUp={(e) => e.stopPropagation()}
-            className="bg-white p-8 rounded-2xl shadow-2xl w-[450px] relative"
+            className="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto relative"
           >
             <button
               onClick={() => {
                 setIsViewModalOpen(false);
                 openModalForEdit(selectedTodo);
               }}
-              className="absolute top-7 right-6 text-[#2B1887] hover:text-[#3b25a5] transition-colors"
+              className="absolute top-6 right-5 text-[#2B1887] hover:text-[#3b25a5] transition-colors"
               title="Edit Todo"
             >
               <LiaEdit className="text-2xl" />
@@ -1337,13 +1338,13 @@ export default function TodoPage() {
                           <div className="flex gap-3 mt-2 text-xs justify-end">
                             <button
                               onClick={() => setEditingComment(c)}
-                              className="text-[#2B1887] "
+                              className="text-[#2B1887]"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDeleteComment(c._id)}
-                              className="text-red-500 "
+                              className="text-red-500"
                             >
                               Delete
                             </button>
