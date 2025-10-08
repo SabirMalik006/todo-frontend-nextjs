@@ -126,28 +126,29 @@ export default function Settings() {
   return (
     <>
 
-      <div className="min-h-screen w-full bg-[oklch(96.7%_0.003_264.542)] ">
+      <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-blue-50/30">
         <Navbar className="fixed top-0 left-0 w-full z-100" />
 
-
-        <div className="w-full max-w-lg flex px-8 pt-5 mb-5 ">
-
+        <div className="w-full max-w-lg flex px-8 pt-5 mb-5">
           <Link
             href={boardId ? `/todo/${boardId}` : "/todo"}
-            className="text-white font-medium text-start bg-[#2B1887] px-3 py-1 rounded-lg mt-17"
+            className="text-white font-medium text-start bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] px-4 py-3 rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
           >
             <IoReturnUpBackOutline className="w-6 h-6" />
           </Link>
         </div>
 
-
         <main className="flex flex-col items-center justify-center min-h-[68vh] px-8">
-          <div className="w-full max-w-lg bg-white   rounded-2xl shadow-2xl px-10 py-6 mb-4">
-
-            <div className="flex flex-col items-center">
-              <label className="mt-3 block text-gray-800 font-semibold text-3xl mb-2">
-                Change Profile Image
-              </label>
+          <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl px-8 py-8 mb-4 border border-gray-100">
+            <div className="flex flex-col items-center mb-6">
+              <div className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] p-4 rounded-2xl w-full text-center mb-6">
+                <label className="block text-white font-bold text-2xl">
+                  Change Profile Image
+                </label>
+                <p className="text-white/80 text-sm mt-1">
+                  Update your profile information
+                </p>
+              </div>
 
               <input
                 type="file"
@@ -166,86 +167,88 @@ export default function Settings() {
                   <img
                     src={imagePreview}
                     alt="Preview"
-                    className="w-32 h-32 rounded-full object-cover hover:opacity-80 transition duration-200"
+                    className="w-40 h-40 rounded-full object-cover hover:opacity-80 transition-all duration-200 shadow-lg border-4 border-white"
                   />
                 ) : (
-                  <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center hover:opacity-80 transition duration-200 mb-4">
-                    <CiCamera className="h-7 w-7" />
+                  <div className="w-40 h-40 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center hover:opacity-80 transition-all duration-200 shadow-lg border-4 border-white">
+                    <CiCamera className="h-7 w-7 text-gray-600" />
                   </div>
                 )}
               </label>
             </div>
 
+            <div className="space-y-5">
+              <div className="group">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                  Display Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  placeholder="Enter new name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white text-black"
+                />
+              </div>
 
-            <div className="mt-3">
-              <label htmlFor="name" className="text-lg font-medium text-gray-700">
-                Title
-              </label>
-              <input
-                id="name"
-                type="text"
-                placeholder="Enter new name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none text-black focus:ring-2 focus:ring-indigo-500 border-gray-500"
-              />
+              <div className="group">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                  Email Address
+                </label>
+                <input
+                  id="email"
+                  type="text"
+                  placeholder="Email"
+                  value={user?.email || ""}
+                  disabled
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-black bg-gradient-to-br from-gray-100 to-gray-200 cursor-not-allowed opacity-70"
+                />
+              </div>
+
+              <div className="group">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                  Change Password
+                </label>
+                <div className="space-y-4">
+                  <input
+                    type="password"
+                    placeholder="Enter old password"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white"
+                  />
+
+                  <input
+                    type="password"
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white"
+                  />
+
+                  <input
+                    type="password"
+                    placeholder="Re-enter new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white"
+                  />
+                </div>
+              </div>
             </div>
-
-
-            <div className="mt-3">
-              <label htmlFor="email" className="text-lg font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                id="email"
-                type="text"
-                placeholder="Email"
-                value={user?.email || ""}
-                disabled
-                className="w-full mt-1 px-4 py-2 border rounded-lg text-black bg-gray-200 cursor-not-allowed opacity-70 border-gray-500"
-              />
-            </div>
-
-
-            <div className="mt-3">
-              <label className="text-lg font-medium text-gray-700">Old Password</label>
-              <input
-                type="password"
-                placeholder="Enter old password"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border rounded-lg text-black focus:outline-none mb-3 border-gray-500"
-              />
-
-              <label className="text-lg font-medium text-gray-700">New Password</label>
-              <input
-                type="password"
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border rounded-lg text-black focus:outline-none border-gray-500 mb-3"
-              />
-
-              <label className="text-lg font-medium text-gray-700">Confirm Password</label>
-              <input
-                type="password"
-                placeholder="Re-enter new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border rounded-lg text-black focus:outline-none border-gray-500"
-              />
-            </div>
-
 
             <div className="mt-8">
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={loading}
-                className={`w-full bg-[#2B1887] text-white py-2 rounded-lg cursor-pointer font-semibold transition duration-300 ${loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-80 mb-4"
+                className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg ${loading
+                  ? "bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed cursor-pointer"
+                  : "bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white hover:scale-105 cursor-pointer"
                   }`}
               >
-                {loading ? "Saving..." : "Save All Changes"}
+                {loading ? "Saving Changes..." : "Save All Changes"}
               </button>
             </div>
           </div>

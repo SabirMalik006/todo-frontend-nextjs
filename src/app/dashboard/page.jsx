@@ -94,15 +94,14 @@ export default function Dashboard() {
   return (
     <AuthRoute>
       <Navbar />
-      <div className="min-h-screen bg-slate-100 flex flex-col items-center py-10 px-4 sm:px-6 md:px-10 border mt-13 ">
-        <div className="flex flex-col sm:flex-row justify-between items-center w-full max-w-6xl mb-10 gap-4 ">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 flex flex-col items-center py-10 px-4 sm:px-6 md:px-10 mt-13">
+        <div className="flex flex-col sm:flex-row justify-between items-center w-full max-w-6xl mb-10 gap-4">
           <h1 className="text-3xl sm:text-4xl font-semibold text-slate-800 tracking-tight text-center sm:text-left">
             My Boards
           </h1>
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center justify-center gap-2 bg-slate-800 text-white px-5 sm:px-6 py-3 rounded-lg font-medium
-                 hover:bg-slate-900 transition shadow-sm w-full sm:w-auto cursor-pointer"
+            className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white px-5 sm:px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200 shadow-md w-full sm:w-auto cursor-pointer"
           >
             <FaPlus /> Create Board
           </button>
@@ -122,8 +121,7 @@ export default function Dashboard() {
             {boards.map((board) => (
               <div
                 key={board._id}
-                className="bg-white p-5 sm:p-4 rounded-xl shadow-sm transition-all duration-300 
-                   border border-slate-200 hover:border-slate-300 group overflow-hidden flex flex-col justify-between"
+                className="bg-white p-5 sm:p-4 rounded-3xl shadow-2xl transition-all duration-300 border border-gray-100 hover:border-gray-200 group overflow-hidden flex flex-col justify-between"
               >
                 <div>
                   <div className="flex justify-between items-start gap-3">
@@ -152,16 +150,14 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <p className="text-sm sm:text-base text-slate-500 mt-4 overflow-hidden text-ellipsis line-clamp-3 break-words text-left ">
+                  <p className="text-sm sm:text-base text-slate-500 mt-4 overflow-hidden text-ellipsis line-clamp-3 break-words text-left">
                     {board.description || "No description provided"}
                   </p>
                 </div>
 
                 <button
                   onClick={() => openBoard(board._id)}
-                  className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-800 
-                     text-slate-700 py-2 px-4 rounded-lg font-medium transition-all duration-300 
-                     hover:text-white mt-4 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-[#2B1887] hover:to-[#4a3bbd] text-white py-2 px-4 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg mt-4 cursor-pointer"
                 >
                   Open Board
                   <FaArrowRight size={12} />
@@ -173,62 +169,77 @@ export default function Dashboard() {
 
         {modalOpen && (
           <div
-            onMouseDown={(e) => {
-              const modal = e.currentTarget.querySelector(".modal-content");
-              if (!modal.contains(e.target)) {
-                const handleMouseUp = (upEvent) => {
-                  if (!modal.contains(upEvent.target)) {
-                    setModalOpen(false);
-                  }
-                  document.removeEventListener("mouseup", handleMouseUp);
-                };
-                document.addEventListener("mouseup", handleMouseUp);
+            onMouseDown={(e) => (e.currentTarget.dataset.down = "true")}
+            onMouseUp={(e) => {
+              if (e.currentTarget.dataset.down === "true") {
+                setModalOpen(false);
               }
+              delete e.currentTarget.dataset.down;
             }}
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50"
+            className="fixed inset-0 bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md flex justify-center items-center z-50 p-4 sm:p-6"
           >
             <div
-              className="modal-content bg-white p-6 rounded-2xl shadow-lg w-[400px]"
-              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onMouseUp={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-[450px] overflow-hidden relative border border-gray-100"
             >
-              <h2 className="text-2xl font-bold text-gray-600 text-center mb-4 cursor-pointer">
-                Create Board
-              </h2>
+              <div className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] p-6 relative">
+                <h2 className="text-2xl font-bold text-white text-center">
+                  Create Board
+                </h2>
+                <p className="text-white/80 text-sm mt-1 text-center">
+                  Start organizing your tasks
+                </p>
+              </div>
 
-              <label className="block text-gray-700 mb-1">Board Title</label>
-              <input
-                type="text"
-                value={newBoard.title}
-                onChange={(e) =>
-                  setNewBoard({ ...newBoard, title: e.target.value })
-                }
-                placeholder="Enter board title"
-                className="border border-slate-400 px-3 py-2 rounded-lg w-full mb-3"
-              />
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="group">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                      Board Title
+                    </label>
+                    <input
+                      type="text"
+                      value={newBoard.title}
+                      onChange={(e) =>
+                        setNewBoard({ ...newBoard, title: e.target.value })
+                      }
+                      placeholder="Enter board title"
+                      className="border border-gray-300 rounded-xl w-full p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white"
+                    />
+                  </div>
 
-              <label className="block text-gray-700 mb-1">Description</label>
-              <textarea
-                value={newBoard.description}
-                onChange={(e) =>
-                  setNewBoard({ ...newBoard, description: e.target.value })
-                }
-                placeholder="Enter board description"
-                className="border border-slate-400 px-3 py-2 rounded-lg w-full mb-4 resize-none"
-              />
+                  <div className="group">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                      Description
+                    </label>
+                    <textarea
+                      value={newBoard.description}
+                      onChange={(e) =>
+                        setNewBoard({ ...newBoard, description: e.target.value })
+                      }
+                      placeholder="Enter board description"
+                      className="border border-gray-300 rounded-xl w-full p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
 
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setModalOpen(false)}
-                  className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCreateBoard}
-                  className="bg-[#3d25b6] text-white px-4 py-2 rounded-lg hover:scale-105 duration-300 cursor-pointer"
-                >
-                  Create
-                </button>
+              <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setModalOpen(false)}
+                    className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCreateBoard}
+                    className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  >
+                    Create Board
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -236,73 +247,77 @@ export default function Dashboard() {
 
         {editModalOpen && editBoard && (
           <div
-            onMouseDown={(e) => {
-              const modal = e.currentTarget.querySelector(".modal-content");
-              if (!modal.contains(e.target)) {
-                /*************  ✨ Windsurf Command 🌟  *************/
-                /**
-                 * Handles mouse up event on the modal.
-                 * If the target of the event is not the modal content,
-                 * the modal is closed and the event listener is removed.
-                 * @param {MouseEvent} upEvent - The mouse up event.
-                 */
-                const handleMouseUp = (upEvent) => {
-                  const modal =
-                    upEvent.currentTarget.querySelector(".modal-content");
-                  if (!modal.contains(upEvent.target)) {
-                    setEditModalOpen(false);
-                    document.removeEventListener("mouseup", handleMouseUp);
-                  }
-                  document.removeEventListener("mouseup", handleMouseUp);
-                };
-                /*******  13980378-4a6e-43e9-afb6-87c9bddbd31a  *******/
-                document.addEventListener("mouseup", handleMouseUp);
+            onMouseDown={(e) => (e.currentTarget.dataset.down = "true")}
+            onMouseUp={(e) => {
+              if (e.currentTarget.dataset.down === "true") {
+                setEditModalOpen(false);
               }
+              delete e.currentTarget.dataset.down;
             }}
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50"
+            className="fixed inset-0 bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md flex justify-center items-center z-50 p-4 sm:p-6"
           >
             <div
-              className="modal-content bg-white p-6 rounded-2xl shadow-lg w-[400px]"
-              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onMouseUp={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-[450px] overflow-hidden relative border border-gray-100"
             >
-              <h2 className="text-2xl font-bold text-gray-600 text-center mb-4">
-                Edit Board
-              </h2>
+              <div className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] p-6 relative">
+                <h2 className="text-2xl font-bold text-white text-center">
+                  Edit Board
+                </h2>
+                <p className="text-white/80 text-sm mt-1 text-center">
+                  Update your board details
+                </p>
+              </div>
 
-              <label className="block text-gray-700 mb-1">Board Title</label>
-              <input
-                type="text"
-                value={editBoard.title}
-                onChange={(e) =>
-                  setEditBoard({ ...editBoard, title: e.target.value })
-                }
-                placeholder="Enter board title"
-                className="border px-3 py-2 rounded-lg w-full mb-3"
-              />
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="group">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                      Board Title
+                    </label>
+                    <input
+                      type="text"
+                      value={editBoard.title}
+                      onChange={(e) =>
+                        setEditBoard({ ...editBoard, title: e.target.value })
+                      }
+                      placeholder="Enter board title"
+                      className="border border-gray-300 rounded-xl w-full p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white"
+                    />
+                  </div>
 
-              <label className="block text-gray-700 mb-1">Description</label>
-              <textarea
-                value={editBoard.description}
-                onChange={(e) =>
-                  setEditBoard({ ...editBoard, description: e.target.value })
-                }
-                placeholder="Enter board description"
-                className="border px-3 py-2 rounded-lg w-full mb-4 resize-none"
-              />
+                  <div className="group">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                      Description
+                    </label>
+                    <textarea
+                      value={editBoard.description}
+                      onChange={(e) =>
+                        setEditBoard({ ...editBoard, description: e.target.value })
+                      }
+                      placeholder="Enter board description"
+                      className="border border-gray-300 rounded-xl w-full p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
 
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setEditModalOpen(false)}
-                  className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleEditBoard}
-                  className="bg-[#3d25b6] text-white px-4 py-2 rounded-lg hover:scale-105 duration-300 cursor-pointer"
-                >
-                  Save
-                </button>
+              <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setEditModalOpen(false)}
+                    className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleEditBoard}
+                    className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  >
+                    Save Changes
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -35,6 +35,21 @@ export default function TodoPage() {
   const [newComment, setNewComment] = useState("");
   const [editingComment, setEditingComment] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [activeCommentMenu, setActiveCommentMenu] = useState(null);
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setActiveCommentMenu(null);
+    };
+
+    if (activeCommentMenu) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [activeCommentMenu]);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -56,7 +71,7 @@ export default function TodoPage() {
   const startX = useRef(0);
   const scrollLeft = useRef(0);
 
-  const cleanupScrolling = () => {};
+  const cleanupScrolling = () => { };
 
   const handleBoardMouseDown = (e) => {
     if (isDragging) return;
@@ -74,6 +89,17 @@ export default function TodoPage() {
     if (boardContainerRef.current) {
       boardContainerRef.current.style.cursor = "grabbing";
     }
+  };
+
+  const updateTodoInColumns = (updatedTodo) => {
+    setColumns(prevColumns =>
+      prevColumns.map(column => ({
+        ...column,
+        todos: column.todos?.map(todo =>
+          todo._id === updatedTodo._id ? updatedTodo : todo
+        ) || []
+      }))
+    );
   };
 
   useEffect(() => {
@@ -268,20 +294,37 @@ export default function TodoPage() {
         text: newComment,
       });
       setComments((prev) => [res.data, ...prev]);
+
+      // Update both selectedTodo and columns
+      const updatedTodo = {
+        ...selectedTodo,
+        comments: [res.data, ...(selectedTodo.comments || [])]
+      };
+
+      setSelectedTodo(updatedTodo);
+      updateTodoInColumns(updatedTodo);
+
       setNewComment("");
     } catch (err) {
       console.error("Add comment failed:", err);
     }
   };
 
-  const handleUpdateComment = async (id) => {
-    if (!editingComment?.text?.trim()) return;
+  const handleUpdateComment = async (commentId) => {
     try {
-      const res = await api.put(`/todos/${selectedTodo._id}/comments/${id}`, {
+      const res = await api.put(`/todos/${selectedTodo._id}/comments/${commentId}`, {
         text: editingComment.text,
       });
+      setComments(prev => prev.map(c => c._id === commentId ? res.data : c));
 
-      setComments((prev) => prev.map((c) => (c._id === id ? res.data : c)));
+      // Update both selectedTodo and columns
+      const updatedTodo = {
+        ...selectedTodo,
+        comments: selectedTodo.comments.map(c => c._id === commentId ? res.data : c)
+      };
+
+      setSelectedTodo(updatedTodo);
+      updateTodoInColumns(updatedTodo);
 
       setEditingComment(null);
     } catch (err) {
@@ -289,10 +332,21 @@ export default function TodoPage() {
     }
   };
 
-  const handleDeleteComment = async (id) => {
+  const handleDeleteComment = async (commentId) => {
     try {
-      await api.delete(`/todos/${selectedTodo._id}/comments/${id}`);
-      setComments((prev) => prev.filter((c) => c._id !== id));
+      await api.delete(`/todos/${selectedTodo._id}/comments/${commentId}`);
+      setComments(prev => prev.filter(c => c._id !== commentId));
+
+      // Update both selectedTodo and columns
+      const updatedTodo = {
+        ...selectedTodo,
+        comments: selectedTodo.comments.filter(c => c._id !== commentId)
+      };
+
+      setSelectedTodo(updatedTodo);
+      updateTodoInColumns(updatedTodo);
+
+      setActiveCommentMenu(null);
     } catch (err) {
       console.error("Delete comment failed:", err);
     }
@@ -899,7 +953,7 @@ export default function TodoPage() {
                   if (!container.isDown) return;
                   e.preventDefault();
                   const x = e.pageX - container.offsetLeft;
-                  const walk = (x - container.startX) * 1; // adjust scroll speed
+                  const walk = (x - container.startX) * 1;
                   container.scrollLeft = container.scrollLeftStart - walk;
                 }}
               >
@@ -917,15 +971,14 @@ export default function TodoPage() {
                         className="column bg-white py-5 px-4 rounded-lg flex flex-col min-w-[320px] max-w-[820px] w-full min-h-[180px] max-h-[calc(100vh-160px)] overflow-y-auto border border-gray-200 shadow-sm"
                         data-column-id={String(col._id)}
                       >
-                        <div className="flex justify-between items-center mb-4">
+                        <div className="flex justify-between items-center mb-4 sticky top-0 bg-white py-2 z-10 border-b border-gray-200">
                           <h3
-                            className={`font-semibold text-[#2B1887] flex items-center gap-2 max-w-full overflow-hidden ${
-                              columns.length > 6
-                                ? "text-sm sm:text-base"
-                                : columns.length > 4
+                            className={`font-semibold text-[#2B1887] flex items-center gap-2 max-w-full overflow-hidden ${columns.length > 6
+                              ? "text-sm sm:text-base"
+                              : columns.length > 4
                                 ? "text-lg sm:text-xl"
                                 : "text-xl sm:text-2xl"
-                            }`}
+                              }`}
                           >
                             <span className="truncate block max-w-[180px] sm:max-w-[200px] md:max-w-[250px]">
                               {col.name}
@@ -993,7 +1046,7 @@ export default function TodoPage() {
                             <div
                               ref={provided.innerRef}
                               {...provided.droppableProps}
-                              className="flex flex-col gap-3"
+                              className="flex flex-col gap-3 flex-grow"
                             >
                               {col.todos && col.todos.length > 0 ? (
                                 col.todos.map((todo, index) => (
@@ -1059,22 +1112,21 @@ export default function TodoPage() {
                                           <span className="flex items-center gap-1 text-sm sm:text-lg">
                                             {todo.day
                                               ? new Date(
-                                                  todo.day
-                                                ).toLocaleDateString("en-GB", {
-                                                  day: "2-digit",
-                                                  month: "short",
-                                                  year: "numeric",
-                                                })
+                                                todo.day
+                                              ).toLocaleDateString("en-GB", {
+                                                day: "2-digit",
+                                                month: "short",
+                                                year: "numeric",
+                                              })
                                               : "No Date"}
                                           </span>
                                           <span
-                                            className={`text-[11px] font-medium px-2 py-0.5 sm:px-6 sm:py-2 rounded-full capitalize ${
-                                              todo.priority === "high"
-                                                ? "bg-red-100 text-red-600"
-                                                : todo.priority === "medium"
+                                            className={`text-[11px] font-medium px-2 py-0.5 sm:px-6 sm:py-2 rounded-full capitalize ${todo.priority === "high"
+                                              ? "bg-red-100 text-red-600"
+                                              : todo.priority === "medium"
                                                 ? "bg-yellow-100 text-yellow-700"
                                                 : "bg-green-100 text-green-700"
-                                            }`}
+                                              }`}
                                           >
                                             {todo.priority || "low"}
                                           </span>
@@ -1112,83 +1164,103 @@ export default function TodoPage() {
 
       {isModalOpen && (
         <div
-          onMouseDown={(e) => {
-            const modal = e.currentTarget.querySelector(".modal-content");
-            if (!modal.contains(e.target)) {
-              const handleMouseUp = (upEvent) => {
-                if (!modal.contains(upEvent.target)) {
-                  setIsModalOpen(false);
-                  setEditingTodo(null);
-                  setTitle("");
-                  setDescription("");
-                  setActiveColumnForNewTodo(null);
-                }
-                document.removeEventListener("mouseup", handleMouseUp);
-              };
-              document.addEventListener("mouseup", handleMouseUp);
+          onMouseDown={(e) => (e.currentTarget.dataset.down = "true")}
+          onMouseUp={(e) => {
+            if (e.currentTarget.dataset.down === "true") {
+              setIsModalOpen(false);
+              setEditingTodo(null);
+              setTitle("");
+              setDescription("");
+              setActiveColumnForNewTodo(null);
             }
+            delete e.currentTarget.dataset.down;
           }}
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50"
+          className="fixed inset-0 bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md flex justify-center items-center z-50 p-4 sm:p-6"
         >
           <div
-            className="modal-content bg-white p-6 rounded-2xl shadow-lg w-[400px]"
-            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onMouseUp={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-[500px] overflow-hidden relative border border-gray-100"
           >
-            <h2 className="text-2xl font-bold text-[#2B1887] mb-4 text-center">
-              {editingTodo ? "Update Todo" : "Add New Todo"}
-            </h2>
+            <div className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] p-6 relative">
+              <h2 className="text-2xl font-bold text-white text-center">
+                {editingTodo ? "Update Todo" : "Add New Todo"}
+              </h2>
+              <p className="text-white/80 text-sm mt-1 text-center">
+                {editingTodo ? "Modify your todo details" : "Create a new todo task"}
+              </p>
+            </div>
 
-            <label className="block text-gray-700 mb-1">Enter Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter todo title"
-              className="border border-slate-400 px-3 py-2 rounded-lg w-full mb-4"
-            />
+            <div className="p-6">
+              <div className="space-y-5">
+                <div className="group">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                    Enter Title
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter todo title"
+                    className="border border-gray-300 rounded-xl w-full p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white"
+                  />
+                </div>
 
-            <label className="block text-gray-700 mb-1">Select Priority</label>
-            <select
-              value={priority}
-              onChange={(e) => setPriority(e.target.value)}
-              className="border border-slate-400 px-3 py-2 rounded-lg w-full mb-4"
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
+                <div className="group">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                    Select Priority
+                  </label>
+                  <select
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value)}
+                    className="border border-gray-300 rounded-xl w-full p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
 
-            <label className="block text-gray-700 mb-1">
-              Enter Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter todo description"
-              rows="4"
-              className="border border-slate-400 px-3 py-2 rounded-lg w-full mb-4 resize-none"
-            ></textarea>
+                <div className="group">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                    Enter Description
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Enter todo description"
+                    rows="4"
+                    className="border border-gray-300 rounded-xl w-full p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white resize-none"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
 
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setEditingTodo(null);
-                  setTitle("");
-                  setDescription("");
-                  setActiveColumnForNewTodo(null);
-                }}
-                className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveTodo}
-                disabled={loading}
-                className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:scale-105 duration-300 cursor-pointer"
-              >
-                {loading ? "Saving..." : editingTodo ? "Update" : "Save"}
-              </button>
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setEditingTodo(null);
+                    setTitle("");
+                    setDescription("");
+                    setActiveColumnForNewTodo(null);
+                  }}
+                  className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveTodo}
+                  disabled={loading}
+                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg ${loading
+                    ? "bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed"
+                    : "bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white hover:scale-105"
+                    }`}
+                >
+                  {loading ? "Adding..." : editingTodo ? "Update Todo" : "Add Todo"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1217,7 +1289,7 @@ export default function TodoPage() {
                   setIsViewModalOpen(false);
                   openModalForEdit(selectedTodo);
                 }}
-                className="absolute top-5 right-5 bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-full transition-all duration-200 backdrop-blur-sm"
+                className="absolute top-5 right-5 bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-full transition-all duration-200 backdrop-blur-sm cursor-pointer"
                 title="Edit Todo"
               >
                 <LiaEdit className="text-xl" />
@@ -1256,13 +1328,12 @@ export default function TodoPage() {
                       Priority Status
                     </span>
                     <span
-                      className={`px-5 py-2 rounded-full text-sm font-bold uppercase tracking-wide shadow-md ${
-                        selectedTodo.priority === "high"
-                          ? "bg-gradient-to-r from-red-500 to-red-600 text-white"
-                          : selectedTodo.priority === "medium"
+                      className={`px-5 py-2 rounded-full text-sm font-bold uppercase tracking-wide shadow-md ${selectedTodo.priority === "high"
+                        ? "bg-gradient-to-r from-red-500 to-red-600 text-white"
+                        : selectedTodo.priority === "medium"
                           ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
                           : "bg-gradient-to-r from-green-500 to-emerald-600 text-white"
-                      }`}
+                        }`}
                     >
                       {selectedTodo.priority}
                     </span>
@@ -1297,12 +1368,12 @@ export default function TodoPage() {
                       {comments.map((c) => (
                         <div
                           key={c._id}
-                          className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
+                          className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 group relative"
                         >
                           {editingComment?._id === c._id ? (
                             <div>
                               <input
-                                className="border border-gray-300 rounded-lg w-full p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent"
+                                className="border border-gray-300 rounded-xl w-full p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white"
                                 value={editingComment.text}
                                 onChange={(e) =>
                                   setEditingComment({
@@ -1311,25 +1382,25 @@ export default function TodoPage() {
                                   })
                                 }
                               />
-                              <div className="flex justify-end gap-3 mt-3">
-                                <button
-                                  onClick={() => handleUpdateComment(c._id)}
-                                  className="text-sm text-white bg-[#2B1887] px-4 py-1.5 rounded-lg font-medium hover:bg-[#3b25a5] transition-colors"
-                                >
-                                  Save
-                                </button>
+                              <div className="flex justify-end gap-3 mt-4">
                                 <button
                                   onClick={() => setEditingComment(null)}
-                                  className="text-sm text-gray-600 px-4 py-1.5 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                                  className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-4 py-2 rounded-xl font-medium hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-md"
                                 >
                                   Cancel
+                                </button>
+                                <button
+                                  onClick={() => handleUpdateComment(c._id)}
+                                  className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white px-4 py-2 rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all duration-200"
+                                >
+                                  Save
                                 </button>
                               </div>
                             </div>
                           ) : (
                             <>
-                              <div className="flex justify-between items-start mb-2">
-                                <div>
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex-1">
                                   <p className="font-bold text-[#2B1887] text-sm">
                                     {c.user?.name || "Unknown User"}
                                   </p>
@@ -1346,24 +1417,49 @@ export default function TodoPage() {
                                 </div>
                                 {(c.user?._id === currentUserId ||
                                   c.user === currentUserId) && (
-                                  <div className="flex gap-2">
-                                    <button
-                                      onClick={() => setEditingComment(c)}
-                                      className="text-xs text-[#2B1887] font-medium hover:underline"
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteComment(c._id)}
-                                      className="text-xs text-red-500 font-medium hover:underline"
-                                    >
-                                      Delete
-                                    </button>
-                                  </div>
-                                )}
+                                    <div className="relative">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setActiveCommentMenu(activeCommentMenu === c._id ? null : c._id);
+                                        }}
+                                        className="p-1 rounded-lg duration-300 hover:bg-purple-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      >
+                                        <TbDotsVertical className="w-4 h-4 text-[#2B1887] cursor-pointer" />
+                                      </button>
+
+                                      {activeCommentMenu === c._id && (
+                                        <div
+                                          className="absolute right-0 top-6 w-32 bg-white rounded-lg shadow-lg z-50 border border-gray-200"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <div className="flex flex-col text-sm rounded-lg overflow-hidden">
+                                            <div
+                                              className="px-3 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-700 cursor-pointer flex items-center gap-2"
+                                              onClick={() => {
+                                                setActiveCommentMenu(null);
+                                                setEditingComment(c);
+                                              }}
+                                            >
+                                              <FaEdit size={10} /> Edit
+                                            </div>
+                                            <div
+                                              className="px-3 py-2 text-gray-700 hover:bg-red-100 hover:text-red-700 cursor-pointer flex items-center gap-2"
+                                              onClick={() => {
+                                                setActiveCommentMenu(null);
+                                                handleDeleteComment(c._id);
+                                              }}
+                                            >
+                                              <FaTrash size={10} /> Delete
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
                               </div>
 
-                              <p className="text-sm text-gray-700 leading-relaxed break-words mt-2">
+                              <p className="text-sm text-gray-700 leading-relaxed break-words">
                                 {c.text}
                               </p>
                             </>
@@ -1382,7 +1478,7 @@ export default function TodoPage() {
                     />
                     <button
                       onClick={handleAddComment}
-                      className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white px-6 py-3 rounded-xl text-sm font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200"
+                      className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white px-6 py-3 rounded-xl text-sm font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer"
                     >
                       Send
                     </button>
@@ -1408,7 +1504,6 @@ export default function TodoPage() {
 
       {isColumnModalOpen && (
         <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50"
           onMouseDown={(e) => (e.currentTarget.dataset.down = "true")}
           onMouseUp={(e) => {
             if (e.currentTarget.dataset.down === "true") {
@@ -1417,46 +1512,61 @@ export default function TodoPage() {
             }
             delete e.currentTarget.dataset.down;
           }}
+          className="fixed inset-0 bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md flex justify-center items-center z-50 p-4 sm:p-6"
         >
           <div
-            className="bg-white p-6 rounded-2xl shadow-lg w-[400px]"
             onMouseDown={(e) => e.stopPropagation()}
             onMouseUp={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-[450px] overflow-hidden relative border border-gray-100"
           >
-            <h2 className="text-2xl font-bold text-[#2B1887] mb-4">
-              Add New Column
-            </h2>
+            <div className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] p-6 relative">
+              <h2 className="text-2xl font-bold text-white">
+                Add New Column
+              </h2>
+              <p className="text-white/80 text-sm mt-1">
+                Create a new column for your todos
+              </p>
+            </div>
 
-            <label className="block text-gray-700 mb-1">Column Name</label>
-            <input
-              type="text"
-              value={newColumnName}
-              onChange={(e) => setNewColumnName(e.target.value)}
-              placeholder="Enter column name"
-              className="border px-3 py-2 rounded-lg w-full mb-4 "
-            />
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="group">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                    Column Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newColumnName}
+                    onChange={(e) => setNewColumnName(e.target.value)}
+                    placeholder="Enter column name"
+                    className="border border-gray-300 rounded-xl w-full p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white"
+                  />
+                </div>
+              </div>
+            </div>
 
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setIsColumnModalOpen(false);
-                  setNewColumnName("");
-                }}
-                className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-pointer "
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveColumn}
-                disabled={isSavingColumn}
-                className={`px-4 py-2 rounded-lg cursor-pointer transition ${
-                  isSavingColumn
-                    ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-[#2B1887] text-white hover:scale-105 duration-300"
-                }`}
-              >
-                {isSavingColumn ? "Adding..." : "Add"}
-              </button>
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setIsColumnModalOpen(false);
+                    setNewColumnName("");
+                  }}
+                  className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveColumn}
+                  disabled={isSavingColumn}
+                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg ${isSavingColumn
+                    ? "bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed"
+                    : "bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white hover:scale-105"
+                    }`}
+                >
+                  {isSavingColumn ? "Adding..." : "Add Column"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1464,53 +1574,65 @@ export default function TodoPage() {
 
       {isRenameModalOpen && (
         <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center text-black z-50"
-          onMouseDown={(e) =>
-            e.target === e.currentTarget
-              ? (e.currentTarget.dataset.clicked = "true")
-              : null
-          }
-          onClick={(e) => {
-            if (e.currentTarget.dataset.clicked === "true") {
+          onMouseDown={(e) => (e.currentTarget.dataset.down = "true")}
+          onMouseUp={(e) => {
+            if (e.currentTarget.dataset.down === "true") {
               setIsRenameModalOpen(false);
               setRenameColumnName("");
             }
-            e.currentTarget.dataset.clicked = "false";
+            delete e.currentTarget.dataset.down;
           }}
+          className="fixed inset-0 bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-md flex justify-center items-center z-50 p-4 sm:p-6"
         >
           <div
-            className="bg-white p-6 rounded-2xl shadow-lg w-[400px]"
-            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onMouseUp={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-[450px] overflow-hidden relative border border-gray-100"
           >
-            <h2 className="text-2xl font-bold text-[#2B1887] mb-4">
-              Rename Column
-            </h2>
+            <div className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] p-6 relative">
+              <h2 className="text-2xl font-bold text-white">
+                Rename Column
+              </h2>
+              <p className="text-white/80 text-sm mt-1">
+                Update column name
+              </p>
+            </div>
 
-            <label className="block text-gray-700 mb-1">New Column Name</label>
-            <input
-              type="text"
-              value={renameColumnName}
-              onChange={(e) => setRenameColumnName(e.target.value)}
-              placeholder="Enter new column name"
-              className="border px-3 py-2 rounded-lg w-full mb-4"
-            />
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="group">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                    New Column Name
+                  </label>
+                  <input
+                    type="text"
+                    value={renameColumnName}
+                    onChange={(e) => setRenameColumnName(e.target.value)}
+                    placeholder="Enter new column name"
+                    className="border border-gray-300 rounded-xl w-full p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white"
+                  />
+                </div>
+              </div>
+            </div>
 
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setIsRenameModalOpen(false);
-                  setRenameColumnName("");
-                }}
-                className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRenameColumn}
-                className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:scale-105 duration-300 cursor-pointer"
-              >
-                Save
-              </button>
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setIsRenameModalOpen(false);
+                    setRenameColumnName("");
+                  }}
+                  className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRenameColumn}
+                  className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200"
+                >
+                  Save Changes
+                </button>
+              </div>
             </div>
           </div>
         </div>
