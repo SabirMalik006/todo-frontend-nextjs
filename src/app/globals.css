@@ -21,7 +21,7 @@
 }
 
 body {
-  background: white;
+  background: oklch(96.7% 0.003 264.542);
 }
 
 @theme inline {

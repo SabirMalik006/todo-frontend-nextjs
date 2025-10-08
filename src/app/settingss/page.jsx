@@ -126,7 +126,7 @@ export default function Settings() {
   return (
     <>
 
-      <div className="min-h-screen w-full bg-[oklch(96.7%_0.003_264.542)]">
+      <div className="min-h-screen w-full bg-[oklch(96.7%_0.003_264.542)] ">
         <Navbar className="fixed top-0 left-0 w-full z-100" />
 
 
@@ -134,7 +134,7 @@ export default function Settings() {
 
           <Link
             href={boardId ? `/todo/${boardId}` : "/todo"}
-            className="text-white font-medium text-start bg-[#2B1887] px-3 py-1 rounded-lg"
+            className="text-white font-medium text-start bg-[#2B1887] px-3 py-1 rounded-lg mt-17"
           >
             <IoReturnUpBackOutline className="w-6 h-6" />
           </Link>

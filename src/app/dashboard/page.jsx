@@ -94,9 +94,9 @@ export default function Dashboard() {
   return (
     <AuthRoute>
       <Navbar />
-      <div className="min-h-screen bg-slate-100 flex flex-col items-center py-10 px-4 sm:px-6 md:px-10">
-        <div className="flex flex-col sm:flex-row justify-between items-center w-full max-w-6xl mb-10 gap-4">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-800 tracking-tight text-center sm:text-left">
+      <div className="min-h-screen bg-slate-100 flex flex-col items-center py-10 px-4 sm:px-6 md:px-10 border mt-13 ">
+        <div className="flex flex-col sm:flex-row justify-between items-center w-full max-w-6xl mb-10 gap-4 ">
+          <h1 className="text-3xl sm:text-4xl font-semibold text-slate-800 tracking-tight text-center sm:text-left">
             My Boards
           </h1>
           <button

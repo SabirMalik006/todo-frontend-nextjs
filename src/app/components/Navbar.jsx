@@ -50,20 +50,26 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="flex justify-between items-center py-3 sm:py-4 bg-[oklch(96.7%_0.003_264.542)] border-b border-gray-200 px-4 sm:px-8 relative ">
-      {/* Left Logo */}
-      <h1 className="font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl text-slate-800 cursor-pointer">
-        <Link href="/dashboard">
-          Todo App
+    <nav className="fixed top-0 left-0 w-full z-50 flex justify-between items-center py-3 sm:py-4 bg-[oklch(96.7%_0.003_264.542)] border-b border-gray-200 px-4 sm:px-8 shadow-sm">
+
+      <div className="flex items-center gap-2 sm:gap-3 cursor-pointer">
+        <Link href="/dashboard" className="flex items-center gap-2">
+
+          <img
+             src="/image/business.png" 
+            alt="Logo"
+            className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+          />
+
         </Link>
-      </h1>
+      </div>
 
-
-      <h1 className="text-slate-700 text-base  sm:text-xl md:text-3xl font-semibold text-center">
+      {/* Center Title */}
+      <h1 className="text-slate-700 text-base sm:text-xl md:text-3xl font-semibold text-center">
         Todo Kanban
       </h1>
 
-
+      {/* Right User Menu */}
       <div className="relative flex items-center gap-2 sm:gap-3">
         <span className="text-sm sm:text-base md:text-lg text-slate-700 truncate max-w-[100px] sm:max-w-[150px]">
           {user?.name || "Guest"}
@@ -83,7 +89,6 @@ export default function Navbar() {
             user?.name?.charAt(0) || "U"
           )}
         </button>
-
 
         {menuOpen && (
           <div className="absolute right-2 sm:right-7 top-10 sm:top-8 mt-2 w-56 sm:w-72 bg-white rounded-lg shadow-lg border border-slate-200 p-4 sm:p-5 z-50 animate-in fade-in-80 zoom-in-95 slide-in-from-top-2 duration-200">
@@ -111,9 +116,10 @@ export default function Navbar() {
         )}
       </div>
 
+      {/* Overlay for closing menu */}
       {menuOpen && (
-        <div 
-          className="fixed inset-0 bg-transparent z-40" 
+        <div
+          className="fixed inset-0 bg-transparent z-40"
           onClick={() => setMenuOpen(false)}
         />
       )}
