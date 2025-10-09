@@ -14,7 +14,9 @@ export default function InnerRespondInvitePage() {
   const handleAction = async (action) => {
     try {
       setLoading(true);
-      const res = await api.get(`/board-team/invite/${action}/${token}`);
+      const res = await api.post(`/board-team/invite/${action}`, {
+        token: token
+      });
       toast.success(res.data.message);
       setStatus(action);
 

@@ -109,7 +109,7 @@ export default function Navbar() {
               Settings
             </Link>
 
-            <div className="mt-2 flex justify-center">
+            <div className="mt-2 flex justify-center x">
               <LogoutButton />
             </div>
           </div>

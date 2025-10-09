@@ -6,6 +6,7 @@ import AuthRoute from "../components/AuthRoute";
 import { FaTrash, FaEdit, FaPlus, FaArrowRight } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import Navbar from "../components/Navbar";
+import Swal from "sweetalert2";
 
 export default function Dashboard() {
   const [boards, setBoards] = useState([]);
@@ -51,10 +52,26 @@ export default function Dashboard() {
 
   const handleDeleteBoard = async (id, e) => {
     e.stopPropagation();
+
+    if (!id) return toast.error("Invalid board ID");
+
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "This action will permanently delete the board.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+    });
+
+    if (!confirm.isConfirmed) return;
+
     try {
-      await api.delete(`/board/${id}`);
-      setBoards(boards.filter((b) => b._id !== id));
-      toast.success("Board deleted successfully!");
+      const res = await api.delete(`/board/${id}`);
+      setBoards(prev => prev.filter(b => b._id !== id));
+      toast.success(res.data?.message || "Board deleted successfully!");
     } catch (error) {
       toast.error(error.response?.data?.message || "Error deleting board");
     }
@@ -85,9 +102,10 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-600 border-t-transparent"></div>
+      <div className="fixed inset-0 flex items-center justify-center bg-white/50 z-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2B1887]"></div>
       </div>
+
     );
   }
 
@@ -184,7 +202,7 @@ export default function Dashboard() {
               className="bg-white rounded-3xl shadow-2xl w-full max-w-[450px] overflow-hidden relative border border-gray-100"
             >
               <div className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] p-6 relative">
-                <h2 className="text-2xl font-bold text-white text-center">
+                <h2 className="text-2xl font-bold text-white text-center cursor-pointer">
                   Create Board
                 </h2>
                 <p className="text-white/80 text-sm mt-1 text-center">
@@ -229,13 +247,13 @@ export default function Dashboard() {
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => setModalOpen(false)}
-                    className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                    className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleCreateBoard}
-                    className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200"
+                    className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200  cursor-pointer"
                   >
                     Create Board
                   </button>

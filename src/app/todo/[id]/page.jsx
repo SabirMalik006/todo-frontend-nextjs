@@ -13,6 +13,7 @@ import { BiCommentDetail } from "react-icons/bi";
 import Teamsidebar from "../../components/TeamSideBar";
 import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
+import Swal from "sweetalert2";
 
 export default function TodoPage() {
   const { id: boardId } = useParams();
@@ -156,6 +157,7 @@ export default function TodoPage() {
         todos:
           todos
             .filter((t) => {
+              if (!t.column) return false; // ✅ Skip todos with null column
               const todoColId =
                 typeof t.column === "object" ? t.column._id : t.column;
               return String(todoColId) === String(col._id);
@@ -168,8 +170,7 @@ export default function TodoPage() {
       if (!hasDummyCreated && withTodos.length >= 3) {
         const defaultTodo = {
           title: "Welcome!",
-          description:
-            "This is your first todo. Edit or delete it to get started.",
+          description: "This is your first todo. Edit or delete it to get started.",
           priority: "medium",
           column: withTodos[0]._id,
           order: 1,
@@ -179,7 +180,6 @@ export default function TodoPage() {
         try {
           const res = await api.post("/todo", defaultTodo, headers);
           withTodos[0].todos.push(res.data);
-
           localStorage.setItem(`dummy_created_${boardId}`, "true");
         } catch (err) {
           console.error("Failed to create default todo:", err);
@@ -207,9 +207,9 @@ export default function TodoPage() {
       setColumns(withTodos);
     } catch (err) {
       console.error("fetchTodos error:", err.response?.data || err.message);
-      toast.error("Failed to fetch data");
     }
   }, [getAuthHeaders, boardId]);
+
 
   useEffect(() => {
     setColumns([]);
@@ -253,6 +253,33 @@ export default function TodoPage() {
     fetchData();
   }, [boardId, getAuthHeaders, fetchTodos]);
 
+  useEffect(() => {
+    if (!boardId) return;
+
+    const intervalId = setInterval(() => {
+      fetchTodos();
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [boardId, fetchTodos]);
+
+  useEffect(() => {
+    if (!boardId) return;
+
+    const fetchBoardData = async () => {
+      try {
+        const headers = getAuthHeaders();
+        const bRes = await api.get(`/board/${boardId}`, headers);
+        setBoard(bRes.data);
+      } catch (err) {
+        console.error("Error refreshing board:", err);
+      }
+    };
+
+    const boardIntervalId = setInterval(fetchBoardData, 5000);
+    return () => clearInterval(boardIntervalId);
+  }, [boardId, getAuthHeaders]);
+
   const openAddTodoForColumn = (colId) => {
     setEditingTodo(null);
     setTitle("");
@@ -295,7 +322,6 @@ export default function TodoPage() {
       });
       setComments((prev) => [res.data, ...prev]);
 
-      // Update both selectedTodo and columns
       const updatedTodo = {
         ...selectedTodo,
         comments: [res.data, ...(selectedTodo.comments || [])]
@@ -317,7 +343,6 @@ export default function TodoPage() {
       });
       setComments(prev => prev.map(c => c._id === commentId ? res.data : c));
 
-      // Update both selectedTodo and columns
       const updatedTodo = {
         ...selectedTodo,
         comments: selectedTodo.comments.map(c => c._id === commentId ? res.data : c)
@@ -337,7 +362,6 @@ export default function TodoPage() {
       await api.delete(`/todos/${selectedTodo._id}/comments/${commentId}`);
       setComments(prev => prev.filter(c => c._id !== commentId));
 
-      // Update both selectedTodo and columns
       const updatedTodo = {
         ...selectedTodo,
         comments: selectedTodo.comments.filter(c => c._id !== commentId)
@@ -505,20 +529,28 @@ export default function TodoPage() {
   };
 
   const deleteColumn = async (colId) => {
+    if (!colId) return toast.error("Invalid column ID");
+
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "This will permanently delete the column and its todos.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+    });
+
+    if (!confirm.isConfirmed) return;
+
     try {
       const headers = getAuthHeaders();
       await api.delete(`/column/${colId}`, headers);
-
-      setColumns((prev) =>
-        prev.filter((col) => String(col._id) !== String(colId))
-      );
+      setColumns(prev => prev.filter(col => String(col._id) !== String(colId)));
       toast.success("Column deleted 🗑️");
     } catch (err) {
-      console.error(
-        "deleteColumn error:",
-        err.response?.data || err.message || err
-      );
-      toast.error(err.response?.data?.message || "Failed to delete column ");
+      toast.error(err.response?.data?.message || "Failed to delete column");
     }
   };
 
@@ -895,271 +927,273 @@ export default function TodoPage() {
       <Navbar />
       <Teamsidebar boardId={boardId} board={board} />
       <div className="h-full w-full bg-[oklch(96.7%_0.003_264.542)] todo pt-25 mt-10">
-        <div className="flex justify-end px-10 mb-4">
-          <button
-            onClick={() => setIsColumnModalOpen(true)}
-            className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:bg-[#4321a8] duration-300 cursor-pointer"
-          >
-            + Add Column
-          </button>
-        </div>
-        <DragDropContext
-          onDragStart={(start) => {
-            setIsDragging(true);
-            if (boardRef.current) {
-              boardRef.current.style.backgroundColor = "";
-
-              const columnElements =
-                boardRef.current.querySelectorAll(".column");
-              columnElements.forEach((el) => {
-                el.style.boxShadow = "";
-                el.style.opacity = "1";
-                el.style.border = "1px solid #D5CCFF";
-              });
-            }
-          }}
-          onDragUpdate={onDragUpdate}
-          onDragEnd={onDragEnd}
-        >
-          <Droppable
-            droppableId="board-scroll"
-            direction="horizontal"
-            type="COLUMN"
-          >
-            {(boardProvided) => (
-              <div
-                ref={(node) => {
-                  boardRef.current = node;
-                  boardProvided.innerRef(node);
-                }}
-                {...boardProvided.droppableProps}
-                className="flex gap-6 bg-[oklch(96.7%_0.003_264.542)] px-6 lg:px-10 py-4 items-start overflow-x-auto h-full cursor-grab active:cursor-grabbing"
-                onMouseDown={(e) => {
-                  const container = e.currentTarget;
-                  container.isDown = true;
-                  container.startX = e.pageX - container.offsetLeft;
-                  container.scrollLeftStart = container.scrollLeft;
-                }}
-                onMouseLeave={(e) => {
-                  const container = e.currentTarget;
-                  container.isDown = false;
-                }}
-                onMouseUp={(e) => {
-                  const container = e.currentTarget;
-                  container.isDown = false;
-                }}
-                onMouseMove={(e) => {
-                  const container = e.currentTarget;
-                  if (!container.isDown) return;
-                  e.preventDefault();
-                  const x = e.pageX - container.offsetLeft;
-                  const walk = (x - container.startX) * 1;
-                  container.scrollLeft = container.scrollLeftStart - walk;
-                }}
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2B1887]"></div>
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-end px-10 mb-4">
+              <button
+                onClick={() => setIsColumnModalOpen(true)}
+                className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:bg-[#4321a8] duration-300 cursor-pointer"
               >
-                {columns.map((col, colIndex) => (
-                  <Draggable
-                    key={col._id}
-                    draggableId={String(col._id)}
-                    index={colIndex}
+                + Add Column
+              </button>
+            </div>
+            <DragDropContext
+              onDragStart={(start) => {
+                setIsDragging(true);
+                if (boardRef.current) {
+                  boardRef.current.style.backgroundColor = "";
+
+                  const columnElements = boardRef.current.querySelectorAll(".column");
+                  columnElements.forEach((el) => {
+                    el.style.boxShadow = "";
+                    el.style.opacity = "1";
+                    el.style.border = "1px solid #D5CCFF";
+                  });
+                }
+              }}
+              onDragUpdate={onDragUpdate}
+              onDragEnd={onDragEnd}
+            >
+              <Droppable
+                droppableId="board-scroll"
+                direction="horizontal"
+                type="COLUMN"
+              >
+                {(boardProvided) => (
+                  <div
+                    ref={(node) => {
+                      boardRef.current = node;
+                      boardProvided.innerRef(node);
+                    }}
+                    {...boardProvided.droppableProps}
+                    className="flex gap-6 bg-[oklch(96.7%_0.003_264.542)] px-6 lg:px-10 py-4 items-start overflow-x-auto h-full cursor-grab active:cursor-grabbing"
+                    onMouseDown={(e) => {
+                      const container = e.currentTarget;
+                      container.isDown = true;
+                      container.startX = e.pageX - container.offsetLeft;
+                      container.scrollLeftStart = container.scrollLeft;
+                    }}
+                    onMouseLeave={(e) => {
+                      const container = e.currentTarget;
+                      container.isDown = false;
+                    }}
+                    onMouseUp={(e) => {
+                      const container = e.currentTarget;
+                      container.isDown = false;
+                    }}
+                    onMouseMove={(e) => {
+                      const container = e.currentTarget;
+                      if (!container.isDown) return;
+                      e.preventDefault();
+                      const x = e.pageX - container.offsetLeft;
+                      const walk = (x - container.startX) * 1;
+                      container.scrollLeft = container.scrollLeftStart - walk;
+                    }}
                   >
-                    {(providedCol) => (
-                      <div
-                        ref={providedCol.innerRef}
-                        {...providedCol.draggableProps}
-                        {...providedCol.dragHandleProps}
-                        className="column bg-white py-5 px-4 rounded-lg flex flex-col min-w-[320px] max-w-[820px] w-full min-h-[180px] max-h-[calc(100vh-160px)] overflow-y-auto border border-gray-200 shadow-sm"
-                        data-column-id={String(col._id)}
+                    {columns.map((col, colIndex) => (
+                      <Draggable
+                        key={col._id}
+                        draggableId={String(col._id)}
+                        index={colIndex}
                       >
-                        <div className="flex justify-between items-center mb-4 sticky top-0 bg-white py-2 z-10 border-b border-gray-200">
-                          <h3
-                            className={`font-semibold text-[#2B1887] flex items-center gap-2 max-w-full overflow-hidden ${columns.length > 6
-                              ? "text-sm sm:text-base"
-                              : columns.length > 4
-                                ? "text-lg sm:text-xl"
-                                : "text-xl sm:text-2xl"
-                              }`}
+                        {(providedCol) => (
+                          <div
+                            ref={providedCol.innerRef}
+                            {...providedCol.draggableProps}
+                            {...providedCol.dragHandleProps}
+                            className="column bg-white py-5 px-4 rounded-lg flex flex-col min-w-[320px] max-w-[820px] w-full min-h-[180px] max-h-[calc(100vh-160px)] overflow-y-auto border border-gray-200 shadow-sm"
+                            data-column-id={String(col._id)}
                           >
-                            <span className="truncate block max-w-[180px] sm:max-w-[200px] md:max-w-[250px]">
-                              {col.name}
-                            </span>
-                            <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full shrink-0">
-                              {col.todos?.length || 0}
-                            </span>
-                          </h3>
+                            <div className="flex justify-between items-center mb-4 sticky top-0 bg-white py-2 z-10 border-b border-gray-200">
+                              <h3
+                                className={`font-semibold text-[#2B1887] flex items-center gap-2 max-w-full overflow-hidden ${columns.length > 6
+                                  ? "text-sm sm:text-base"
+                                  : columns.length > 4
+                                    ? "text-lg sm:text-xl"
+                                    : "text-xl sm:text-2xl"
+                                  }`}
+                              >
+                                <span className="truncate block max-w-[180px] sm:max-w-[200px] md:max-w-[250px]">
+                                  {col.name}
+                                </span>
+                                <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full shrink-0">
+                                  {col.todos?.length || 0}
+                                </span>
+                              </h3>
 
-                          <div className="relative">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveMenu(
-                                  activeMenu === col._id ? null : col._id
-                                );
-                              }}
-                              className="p-2 rounded-full duration-300 hover:bg-purple-100"
-                            >
-                              <TbDotsVertical className="w-5 h-5 text-[#2B1887] cursor-pointer" />
-                            </button>
+                              <div className="relative">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveMenu(
+                                      activeMenu === col._id ? null : col._id
+                                    );
+                                  }}
+                                  className="p-2 rounded-full duration-300 hover:bg-purple-100"
+                                >
+                                  <TbDotsVertical className="w-5 h-5 text-[#2B1887] cursor-pointer" />
+                                </button>
 
-                            {activeMenu === col._id && (
-                              <div className="absolute right-7 top-6 w-40 bg-white rounded-lg shadow-lg z-20">
-                                <ul className="flex flex-col text-sm rounded-lg overflow-hidden shadow-md border border-gray-200 bg-white">
-                                  <li
-                                    className="px-4 py-2 text-gray-700 hover:bg-green-100 hover:text-green-700 cursor-pointer flex items-center gap-2"
-                                    onClick={() => {
-                                      setActiveMenu(null);
-                                      openAddTodoForColumn(col._id);
-                                    }}
-                                  >
-                                    <FaPlus size={12} /> Add Todo
-                                  </li>
-                                  <li
-                                    className="px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-700 cursor-pointer flex items-center gap-2"
-                                    onClick={() => {
-                                      setActiveMenu(null);
-                                      renameColumn(col._id);
-                                    }}
-                                  >
-                                    <FaEdit size={12} /> Rename
-                                  </li>
-                                  <li
-                                    className="px-4 py-2 text-gray-700 hover:bg-red-100 hover:text-red-700 cursor-pointer flex items-center gap-2"
-                                    onClick={() => {
-                                      setActiveMenu(null);
-                                      deleteColumn(col._id);
-                                    }}
-                                  >
-                                    <FaTrash size={12} /> Delete Column
-                                  </li>
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <Droppable
-                          droppableId={String(col._id)}
-                          type="TASK"
-                          ignoreContainerClipping={true}
-                        >
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.droppableProps}
-                              className="flex flex-col gap-3 flex-grow"
-                            >
-                              {col.todos && col.todos.length > 0 ? (
-                                col.todos.map((todo, index) => (
-                                  <Draggable
-                                    key={String(todo._id)}
-                                    draggableId={String(todo._id)}
-                                    index={index}
-                                  >
-                                    {(provided, snapshot) => (
-                                      <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        onClick={(e) => {
-                                          if (
-                                            e.target.closest(
-                                              ".delete-btn, .edit-btn"
-                                            )
-                                          )
-                                            return;
-                                          if (isDragging) return;
-                                          openViewModal(todo);
+                                {activeMenu === col._id && (
+                                  <div className="absolute right-7 top-6 w-40 bg-white rounded-lg shadow-lg z-20">
+                                    <ul className="flex flex-col text-sm rounded-lg overflow-hidden shadow-md border border-gray-200 bg-white">
+                                      <li
+                                        className="px-4 cursor-pointer py-2 text-gray-700 hover:bg-green-100 hover:text-green-700 cursor-pointer flex items-center gap-2"
+                                        onClick={() => {
+                                          setActiveMenu(null);
+                                          openAddTodoForColumn(col._id);
                                         }}
-                                        style={{
-                                          ...provided.draggableProps.style,
-                                          zIndex: snapshot.isDragging
-                                            ? 9999
-                                            : "auto",
-                                          opacity: snapshot.isDragging
-                                            ? 0.9
-                                            : 1,
-                                          boxShadow: snapshot.isDragging
-                                            ? "0 5px 10px rgba(0,0,0,0.2)"
-                                            : "none",
-                                        }}
-                                        className="todo-item relative bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden"
                                       >
-                                        <div className="flex justify-between items-center mb-2">
-                                          <h3 className="text-sm sm:text-xl font-semibold text-gray-800 leading-snug mb-1 truncate">
-                                            {todo.title}
-                                          </h3>
-                                          <MdDeleteOutline
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              deleteTodo(
-                                                todo._id,
-                                                todo.isDummy
-                                              );
-                                            }}
-                                            className="text-red-500 w-5 h-5 cursor-pointer hover:scale-110 duration-200 delete-btn"
-                                          />
-                                        </div>
-
-                                        <p
-                                          className="text-xs sm:text-lg text-gray-500 mb-3 line-clamp-2"
-                                          title={todo.description}
-                                        >
-                                          {todo.description ||
-                                            "No description available"}
-                                        </p>
-
-                                        <div className="flex justify-between items-center text-gray-400 text-xs mb-2 border-b border-b-gray-200 pb-2">
-                                          <span className="flex items-center gap-1 text-sm sm:text-lg">
-                                            {todo.day
-                                              ? new Date(
-                                                todo.day
-                                              ).toLocaleDateString("en-GB", {
-                                                day: "2-digit",
-                                                month: "short",
-                                                year: "numeric",
-                                              })
-                                              : "No Date"}
-                                          </span>
-                                          <span
-                                            className={`text-[11px] font-medium px-2 py-0.5 sm:px-6 sm:py-2 rounded-full capitalize ${todo.priority === "high"
-                                              ? "bg-red-100 text-red-600"
-                                              : todo.priority === "medium"
-                                                ? "bg-yellow-100 text-yellow-700"
-                                                : "bg-green-100 text-green-700"
-                                              }`}
-                                          >
-                                            {todo.priority || "low"}
-                                          </span>
-                                        </div>
-
-                                        <div className="flex justify-start items-center gap-4 text-xs text-gray-500">
-                                          <span className="flex items-center gap-1">
-                                            <BiCommentDetail className="text-gray-400 w-4 h-4" />
-                                            {todo.comments?.length || 0}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </Draggable>
-                                ))
-                              ) : (
-                                <p className="text-gray-500 text-center pt-5 text-sm sm:text-xl">
-                                  No todos here
-                                </p>
-                              )}
-                              {provided.placeholder}
+                                        <FaPlus size={12} /> Add Todo
+                                      </li>
+                                      <li
+                                        className="px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-700 cursor-pointer flex items-center gap-2"
+                                        onClick={() => {
+                                          setActiveMenu(null);
+                                          renameColumn(col._id);
+                                        }}
+                                      >
+                                        <FaEdit size={12} /> Rename
+                                      </li>
+                                      <li
+                                        className="px-4 py-2 text-gray-700 hover:bg-red-100 hover:text-red-700 cursor-pointer flex items-center gap-2"
+                                        onClick={() => {
+                                          setActiveMenu(null);
+                                          deleteColumn(col._id);
+                                        }}
+                                      >
+                                        <FaTrash size={12} /> Delete Column
+                                      </li>
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          )}
-                        </Droppable>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {boardProvided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+
+                            <Droppable
+                              droppableId={String(col._id)}
+                              type="TASK"
+                              ignoreContainerClipping={true}
+                            >
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.droppableProps}
+                                  className="flex flex-col gap-3 flex-grow"
+                                >
+                                  {col.todos && col.todos.length > 0 ? (
+                                    col.todos.map((todo, index) => (
+                                      <Draggable
+                                        key={String(todo._id)}
+                                        draggableId={String(todo._id)}
+                                        index={index}
+                                      >
+                                        {(provided, snapshot) => (
+                                          <div
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
+                                            onClick={(e) => {
+                                              if (
+                                                e.target.closest(
+                                                  ".delete-btn, .edit-btn"
+                                                )
+                                              )
+                                                return;
+                                              if (isDragging) return;
+                                              openViewModal(todo);
+                                            }}
+                                            style={{
+                                              ...provided.draggableProps.style,
+                                              zIndex: snapshot.isDragging
+                                                ? 9999
+                                                : "auto",
+                                              opacity: snapshot.isDragging ? 0.9 : 1,
+                                              boxShadow: snapshot.isDragging
+                                                ? "0 5px 10px rgba(0,0,0,0.2)"
+                                                : "none",
+                                            }}
+                                            className="todo-item relative bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden"
+                                          >
+                                            <div className="flex justify-between items-center mb-2">
+                                              <h3 className="text-sm sm:text-xl font-semibold text-gray-800 leading-snug mb-1 truncate">
+                                                {todo.title}
+                                              </h3>
+                                              <MdDeleteOutline
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  deleteTodo(todo._id, todo.isDummy);
+                                                }}
+                                                className="text-red-500 w-5 h-5 cursor-pointer hover:scale-110 duration-200 delete-btn"
+                                              />
+                                            </div>
+
+                                            <p
+                                              className="text-xs sm:text-lg text-gray-500 mb-3 line-clamp-2"
+                                              title={todo.description}
+                                            >
+                                              {todo.description ||
+                                                "No description available"}
+                                            </p>
+
+                                            <div className="flex justify-between items-center text-gray-400 text-xs mb-2 border-b border-b-gray-200 pb-2">
+                                              <span className="flex items-center gap-1 text-sm sm:text-lg">
+                                                {todo.day
+                                                  ? new Date(
+                                                    todo.day
+                                                  ).toLocaleDateString("en-GB", {
+                                                    day: "2-digit",
+                                                    month: "short",
+                                                    year: "numeric",
+                                                  })
+                                                  : "No Date"}
+                                              </span>
+                                              <span
+                                                className={`text-[11px] font-medium px-2 py-0.5 sm:px-6 sm:py-2 rounded-full capitalize ${todo.priority === "high"
+                                                  ? "bg-red-100 text-red-600"
+                                                  : todo.priority === "medium"
+                                                    ? "bg-yellow-100 text-yellow-700"
+                                                    : "bg-green-100 text-green-700"
+                                                  }`}
+                                              >
+                                                {todo.priority || "low"}
+                                              </span>
+                                            </div>
+
+                                            <div className="flex justify-start items-center gap-4 text-xs text-gray-500">
+                                              <span className="flex items-center gap-1">
+                                                <BiCommentDetail className="text-gray-400 w-4 h-4" />
+                                                {todo.comments?.length || 0}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </Draggable>
+                                    ))
+                                  ) : (
+                                    <p className="text-gray-500 text-center pt-5 text-sm sm:text-xl">
+                                      No todos here
+                                    </p>
+                                  )}
+                                  {provided.placeholder}
+                                </div>
+                              )}
+                            </Droppable>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {boardProvided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          </>
+        )}
       </div>
 
       {isModalOpen && (
@@ -1246,7 +1280,7 @@ export default function TodoPage() {
                     setDescription("");
                     setActiveColumnForNewTodo(null);
                   }}
-                  className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                  className="cursor-pointer bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
                 >
                   Cancel
                 </button>
@@ -1254,8 +1288,8 @@ export default function TodoPage() {
                   onClick={saveTodo}
                   disabled={loading}
                   className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg ${loading
-                    ? "bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white hover:scale-105"
+                    ? "bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed cursor-pointer"
+                    : "bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white hover:scale-105 cursor-pointer"
                     }`}
                 >
                   {loading ? "Adding..." : editingTodo ? "Update Todo" : "Add Todo"}
@@ -1622,13 +1656,13 @@ export default function TodoPage() {
                     setIsRenameModalOpen(false);
                     setRenameColumnName("");
                   }}
-                  className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                  className="cursor-pointer bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleRenameColumn}
-                  className="bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  className="cursor-pointer bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200"
                 >
                   Save Changes
                 </button>

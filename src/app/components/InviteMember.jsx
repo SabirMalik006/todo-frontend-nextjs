@@ -14,7 +14,7 @@ export default function InviteMember({ boardId }) {
 
     try {
       setLoading(true);
-      const res = await api.post(`/board-team/board/${boardId}/invite`, { email });
+       const res = await api.post(`/board-team/board/${boardId}/invite`, { email });
 
       if (res.data.message) toast.success(res.data.message);
       else toast.success("Invitation email sent successfully!");
