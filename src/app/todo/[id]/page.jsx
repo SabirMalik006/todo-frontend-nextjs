@@ -495,38 +495,61 @@ export default function TodoPage() {
     }
   };
 
-  const deleteTodo = async (id, isDummy = false) => {
-    if (isDummy) {
-      setColumns((prev) =>
-        prev.map((col) => ({
-          ...col,
-          todos: col.todos.filter((t) => t._id !== id),
-        }))
-      );
+const deleteTodo = async (id, isDummy = false) => {
+  if (isDummy) {
+    const confirmDelete = await Swal.fire({
+      title: "Delete Todo?",
+      text: "Are you sure you want to remove this dummy todo?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    });
+    if (!confirmDelete.isConfirmed) return;
 
-      const saved = JSON.parse(localStorage.getItem("dummyOrder"));
-      if (saved && saved._id === id) localStorage.removeItem("dummyOrder");
+    setColumns((prev) =>
+      prev.map((col) => ({
+        ...col,
+        todos: col.todos.filter((t) => t._id !== id),
+      }))
+    );
 
-      toast.success("Dummy todo removed 🗑️");
-      return;
-    }
+    const saved = JSON.parse(localStorage.getItem("dummyOrder"));
+    if (saved && saved._id === id) localStorage.removeItem("dummyOrder");
 
-    try {
-      const headers = getAuthHeaders();
-      await api.delete(`/todo/${id}`, headers);
+    toast.success("Dummy todo removed 🗑️");
+    return;
+  }
 
-      setColumns((prev) =>
-        prev.map((col) => ({
-          ...col,
-          todos: col.todos.filter((t) => String(t._id) !== String(id)),
-        }))
-      );
-      toast.success("Todo deleted 🗑️");
-    } catch (err) {
-      console.error("deleteTodo error:", err.response?.data || err.message);
-      toast.error("Failed to delete ");
-    }
-  };
+  const confirmDelete = await Swal.fire({
+    title: "Delete Todo?",
+    text: "This todo will be permanently removed.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Yes, delete it!",
+  });
+  if (!confirmDelete.isConfirmed) return;
+
+  try {
+    const headers = getAuthHeaders();
+    await api.delete(`/todo/${id}`, headers);
+
+    setColumns((prev) =>
+      prev.map((col) => ({
+        ...col,
+        todos: col.todos.filter((t) => String(t._id) !== String(id)),
+      }))
+    );
+    toast.success("Todo deleted 🗑️");
+  } catch (err) {
+    console.error("deleteTodo error:", err.response?.data || err.message);
+    toast.error("Failed to delete");
+  }
+};
+
 
   const deleteColumn = async (colId) => {
     if (!colId) return toast.error("Invalid column ID");
