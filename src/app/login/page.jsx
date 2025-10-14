@@ -8,7 +8,6 @@ import AuthRoute from "../components/AuthRoute";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { cn } from "@/lib/utils";
-import { IconBrandGoogle, IconBrandGithub } from "@tabler/icons-react";
 import api from "../utils/api";
 
 export default function LoginPage() {
@@ -112,7 +111,7 @@ export default function LoginPage() {
                          text-black dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_#262626] border border-[oklch(0.554_0.046_257.417)] cursor-pointer"
                 type="button"
               >
-                <IconBrandGoogle className="h-4 w-4 text-neutral-800 dark:text-neutral-300" />
+               <img src="/image/google-tile.svg" alt=""  className="w-5 h-5" />
                 <span className="text-sm text-neutral-700 dark:text-neutral-300  cursor-pointer   ">
                   Continue with Google
                 </span>

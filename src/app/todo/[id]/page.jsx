@@ -959,7 +959,7 @@ const deleteTodo = async (id, isDummy = false) => {
             <div className="flex justify-end px-10 mb-4">
               <button
                 onClick={() => setIsColumnModalOpen(true)}
-                className="bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:bg-[#4321a8] duration-300 cursor-pointer"
+                className="cursor-pointer bg-[#2B1887] text-white px-4 py-2 rounded-lg hover:bg-[#4321a8] duration-300 cursor-pointer"
               >
                 + Add Column
               </button>
@@ -1177,10 +1177,10 @@ const deleteTodo = async (id, isDummy = false) => {
                                               </span>
                                               <span
                                                 className={`text-[11px] font-medium px-2 py-0.5 sm:px-6 sm:py-2 rounded-full capitalize ${todo.priority === "high"
-                                                  ? "bg-red-100 text-red-600"
+                                                  ? "bg-gradient-to-r from-red-500 to-red-600 text-white"
                                                   : todo.priority === "medium"
-                                                    ? "bg-yellow-100 text-yellow-700"
-                                                    : "bg-green-100 text-green-700"
+                                                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
+                                                    : "bg-gradient-to-r from-green-500 to-emerald-600 text-white"
                                                   }`}
                                               >
                                                 {todo.priority || "low"}
@@ -1596,7 +1596,7 @@ const deleteTodo = async (id, isDummy = false) => {
                     value={newColumnName}
                     onChange={(e) => setNewColumnName(e.target.value)}
                     placeholder="Enter column name"
-                    className="border border-gray-300 rounded-xl w-full p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white"
+                    className="cursor-pointer border border-gray-300 rounded-xl w-full p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2B1887] focus:border-transparent bg-gradient-to-br from-gray-50 to-white"
                   />
                 </div>
               </div>
@@ -1609,14 +1609,14 @@ const deleteTodo = async (id, isDummy = false) => {
                     setIsColumnModalOpen(false);
                     setNewColumnName("");
                   }}
-                  className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                  className="cursor-pointer bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={saveColumn}
                   disabled={isSavingColumn}
-                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg ${isSavingColumn
+                  className={`cursor-pointer px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg ${isSavingColumn
                     ? "bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed"
                     : "bg-gradient-to-r from-[#2B1887] to-[#4a3bbd] text-white hover:scale-105"
                     }`}
